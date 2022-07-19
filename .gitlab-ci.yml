@@ -1,0 +1,16 @@
+stages:
+  - build
+
+image: fpco/stack-build:lts-19
+
+variables:
+  STACK_ROOT: "${CI_PROJECT_DIR}/.stack-root"
+  
+build:
+  stage: build
+  script:
+    - stack build
+    - stack test
+  artifacts:
+    paths:
+      - .stack-root
