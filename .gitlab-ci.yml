@@ -11,6 +11,6 @@ build:
   script:
     - stack build
     - stack test
-  artifacts:
+  cache:
     paths:
       - .stack-root

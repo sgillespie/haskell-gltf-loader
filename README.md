@@ -1,5 +1,7 @@
 # Haskell GlTF Loader
 
+[![pipeline status](https://gitlab.com/sgillespie/haskell-gltf-loader/badges/main/pipeline.svg)](https://gitlab.com/sgillespie/haskell-gltf-loader/-/commits/main)
+
 > A high level GlTF loader
 
 ## Execute
