@@ -1,0 +1,7 @@
+resolver: lts-19.15
+
+packages:
+  - .
+
+extra-deps:
+  - gltf-codec-0.1.0.4
