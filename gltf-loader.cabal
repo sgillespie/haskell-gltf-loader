@@ -26,10 +26,7 @@ source-repository head
 
 library
   exposed-modules:
-      Import
-      Run
-      Types
-      Util
+      Text.GLTF.Loader
   other-modules:
       Paths_gltf_loader
   hs-source-dirs:
@@ -81,6 +78,9 @@ library
 executable gltf-loader-exe
   main-is: Main.hs
   other-modules:
+      Command.GLTF.Loader
+      Command.GLTF.Loader.App
+      Command.GLTF.Loader.Run
       Paths_gltf_loader
   hs-source-dirs:
       app

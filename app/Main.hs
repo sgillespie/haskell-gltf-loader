@@ -2,16 +2,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main (main) where
 
-import Import
-import Run
+import Command.GLTF.Loader
+import Paths_gltf_loader (version)
+
+import RIO
 import RIO.Process
 import Options.Applicative.Simple
-import qualified Paths_gltf_loader
 
 main :: IO ()
 main = do
   (options, ()) <- simpleOptions
-    $(simpleVersion Paths_gltf_loader.version)
+    $(simpleVersion version)
     "Header for command line arguments"
     "Program description, also for command line arguments"
     (Options
