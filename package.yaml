@@ -8,6 +8,7 @@ copyright: 2022 Sean Gillespie
 
 extra-source-files:
   - README.md
+  - data/**/*
 
 synopsis: >-
   High level GlTF loader
@@ -18,6 +19,7 @@ description: >-
 dependencies:
   - base >= 4.11 && < 10
   - rio >= 0.1.12.0
+  - microlens
 
 ghc-options:
   - -Wall
@@ -69,6 +71,8 @@ default-extensions:
 
 library:
   source-dirs: src
+  dependencies:
+    - gltf-codec
 
 executables:
   gltf-loader-exe:

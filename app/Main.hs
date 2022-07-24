@@ -3,7 +3,7 @@
 module Main (main) where
 
 import Command.GLTF.Loader
-import Paths_gltf_loader (version)
+import Paths_gltf_loader
 
 import RIO
 import RIO.Process
@@ -11,23 +11,44 @@ import Options.Applicative.Simple
 
 main :: IO ()
 main = do
-  (options, ()) <- simpleOptions
-    $(simpleVersion version)
-    "Header for command line arguments"
-    "Program description, also for command line arguments"
-    (Options
-       <$> switch ( long "verbose"
-                 <> short 'v'
-                 <> help "Verbose output?"
-                  )
-    )
-    empty
-  lo <- logOptionsHandle stderr (optionsVerbose options)
-  pc <- mkDefaultProcessContext
-  withLogFunc lo $ \lf ->
-    let app = App
-          { appLogFunc = lf
-          , appProcessContext = pc
-          , appOptions = options
+  (options', _) <- parseOptions
+  logOptions <- logOptionsHandle stderr (optionsVerbose options')
+  processContext <- mkDefaultProcessContext
+
+  runApp processContext options' logOptions run
+
+parseOptions :: IO (Options, ())
+parseOptions = simpleOptions version' header' description options empty
+  where version' = $(simpleVersion version)
+        header' = "Header for command line arguments"
+        description = "A tool it inspect GlTF files"
+
+runApp
+  :: MonadUnliftIO m
+  => ProcessContext
+  -> Options
+  -> LogOptions
+  -> RIO App a
+  -> m a
+runApp processContext cliOptions logOptions appAction
+  = withLogFunc logOptions $ \logFunc -> runRIO (mkApp logFunc) appAction
+  where mkApp logFunc = App
+          { appLogFunc = logFunc,
+            appProcessContext = processContext,
+            appOptions = cliOptions
           }
-     in runRIO app run
+
+options :: Parser Options
+options = Options <$> switch verboseOption <*> strArgument fileArg
+
+verboseOption :: Mod FlagFields Bool
+verboseOption
+  = long "verbose"
+    <> short 'v'
+    <> help "Verbose output?"
+
+fileArg :: Mod ArgumentFields FilePath
+fileArg
+  = metavar "file"
+    <> help "Name of the GlTF file"
+    <> completer (bashCompleter "file")
