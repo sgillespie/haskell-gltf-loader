@@ -1,8 +1,6 @@
 module Text.GLTF.LoaderSpec (spec) where
 
 import Text.GLTF.Loader
-import Text.GLTF.Loader.Errors (_ReadError)
-import Text.GLTF.Loader.Gltf
 
 import Lens.Micro
 import RIO
@@ -25,4 +23,23 @@ spec = do
 
     it "Parses expected nodes" $ do
       gltf <- fromFile "data/cube.gltf"
-      gltf `shouldBe` Right (Gltf [Node])
+      let expected = Gltf
+            { gltfAsset = Asset
+                { version = "2.0",
+                  generator = Just $ "Khronos glTF Blender I/O v3.2.40",
+                  copyright = Nothing,
+                  minVersion = Nothing
+                },
+
+              gltfNodes
+                = [ Node
+                      { rotation = Nothing,
+                        scale = Nothing,
+                        translation = Nothing,
+                        weights = [],
+                        name = Just "Cube"
+                      }
+                  ]
+            }
+      
+      gltf `shouldBe` Right expected

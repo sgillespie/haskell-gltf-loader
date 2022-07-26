@@ -29,6 +29,7 @@ source-repository head
 library
   exposed-modules:
       Text.GLTF.Loader
+      Text.GLTF.Loader.Adapter
       Text.GLTF.Loader.Errors
       Text.GLTF.Loader.Gltf
   other-modules:
@@ -62,6 +63,7 @@ library
       NamedFieldPuns
       NoImplicitPrelude
       OverloadedStrings
+      OverloadedLists
       PartialTypeSignatures
       PatternGuards
       PolyKinds
@@ -77,6 +79,7 @@ library
   build-depends:
       base >=4.11 && <10
     , gltf-codec
+    , linear
     , microlens
     , rio >=0.1.12.0
   default-language: Haskell2010
@@ -117,6 +120,7 @@ executable gltf-loader-exe
       NamedFieldPuns
       NoImplicitPrelude
       OverloadedStrings
+      OverloadedLists
       PartialTypeSignatures
       PatternGuards
       PolyKinds
@@ -132,6 +136,7 @@ executable gltf-loader-exe
   build-depends:
       base >=4.11 && <10
     , gltf-loader
+    , linear
     , microlens
     , optparse-simple
     , rio >=0.1.12.0
@@ -141,6 +146,7 @@ test-suite gltf-loader-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Text.GLTF.Loader.AdapterSpec
       Text.GLTF.LoaderSpec
       Paths_gltf_loader
   hs-source-dirs:
@@ -172,6 +178,7 @@ test-suite gltf-loader-test
       NamedFieldPuns
       NoImplicitPrelude
       OverloadedStrings
+      OverloadedLists
       PartialTypeSignatures
       PatternGuards
       PolyKinds
@@ -186,8 +193,10 @@ test-suite gltf-loader-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.11 && <10
+    , gltf-codec
     , gltf-loader
     , hspec
+    , linear
     , microlens
     , rio >=0.1.12.0
   default-language: Haskell2010

@@ -5,3 +5,6 @@ packages:
 
 extra-deps:
   - gltf-codec-0.1.0.4
+
+nix:
+  packages: [zlib]

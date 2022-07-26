@@ -19,6 +19,7 @@ description: >-
 dependencies:
   - base >= 4.11 && < 10
   - rio >= 0.1.12.0
+  - linear
   - microlens
 
 ghc-options:
@@ -57,6 +58,7 @@ default-extensions:
   - NamedFieldPuns
   - NoImplicitPrelude
   - OverloadedStrings
+  - OverloadedLists
   - PartialTypeSignatures
   - PatternGuards
   - PolyKinds
@@ -93,6 +95,7 @@ tests:
     source-dirs: test
     dependencies:
       - gltf-loader
+      - gltf-codec
       - hspec
 
     ghc-options:
