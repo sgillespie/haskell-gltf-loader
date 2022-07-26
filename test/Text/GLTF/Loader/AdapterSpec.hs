@@ -8,6 +8,7 @@ import RIO
 import Test.Hspec
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as GlTF.Asset
+import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
 
 spec :: Spec
@@ -78,10 +79,10 @@ codecAsset = GlTF.Asset.Asset
 
 loaderAsset :: Asset
 loaderAsset = Asset
-  { version = "version",
-    copyright = Just "copyright",
-    generator = Just "generator",
-    minVersion = Just "minVersion"
+  { assetVersion = "version",
+    assetCopyright = Just "copyright",
+    assetGenerator = Just "generator",
+    assetMinVersion = Just "minVersion"
   }
 
 codecNode :: GlTF.Node.Node
@@ -90,7 +91,7 @@ codecNode = GlTF.Node.Node
     children = Nothing,
     skin = Nothing,
     matrix = Nothing,
-    mesh = Nothing,
+    mesh = Just (GlTF.Mesh.MeshIx 5),
     rotation = Just (1, 2, 3, 4),
     scale = Just (5, 6, 7),
     translation = Just (8, 9, 10),
@@ -102,9 +103,10 @@ codecNode = GlTF.Node.Node
 
 loaderNode :: Node
 loaderNode = Node
-  { rotation = Just $ V4 1 2 3 4,
-    scale = Just $ V3 5 6 7,
-    translation = Just $ V3 8 9 10,
-    weights = [11, 12, 13],
-    name = Just "node"
+  { nodeMeshId = Just 5,
+    nodeName = Just "node",
+    nodeRotation = Just $ V4 1 2 3 4,
+    nodeScale = Just $ V3 5 6 7,
+    nodeTranslation = Just $ V3 8 9 10,
+    nodeWeights = [11, 12, 13]
   }

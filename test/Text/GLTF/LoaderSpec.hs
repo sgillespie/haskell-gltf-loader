@@ -25,19 +25,20 @@ spec = do
       gltf <- fromFile "data/cube.gltf"
       let expected = Gltf
             { gltfAsset = Asset
-                { version = "2.0",
-                  generator = Just $ "Khronos glTF Blender I/O v3.2.40",
-                  copyright = Nothing,
-                  minVersion = Nothing
+                { assetVersion = "2.0",
+                  assetGenerator = Just "Khronos glTF Blender I/O v3.2.40",
+                  assetCopyright = Nothing,
+                  assetMinVersion = Nothing
                 },
 
               gltfNodes
                 = [ Node
-                      { rotation = Nothing,
-                        scale = Nothing,
-                        translation = Nothing,
-                        weights = [],
-                        name = Just "Cube"
+                      { nodeMeshId = Just 0,
+                        nodeName = Just "Cube",
+                        nodeRotation = Nothing,
+                        nodeScale = Nothing,
+                        nodeTranslation = Nothing,
+                        nodeWeights = []
                       }
                   ]
             }

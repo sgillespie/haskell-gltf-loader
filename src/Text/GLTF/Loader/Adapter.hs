@@ -12,6 +12,7 @@ import Linear (V3(..), V4(..))
 import RIO
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as GlTF.Asset
+import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
 
 adaptGltf :: GlTF.GlTF -> Gltf
@@ -22,10 +23,10 @@ adaptGltf GlTF.GlTF{..} = Gltf
 
 adaptAsset :: GlTF.Asset.Asset -> Asset
 adaptAsset GlTF.Asset.Asset{..} = Asset
-  { version = version,
-    copyright = copyright,
-    generator = generator,
-    minVersion = minVersion
+  { assetVersion = version,
+    assetCopyright = copyright,
+    assetGenerator = generator,
+    assetMinVersion = minVersion
   }
 
 adaptNodes :: Maybe (Vector GlTF.Node.Node) -> [Node]
@@ -33,11 +34,12 @@ adaptNodes = maybe [] (map adaptNode . toList)
 
 adaptNode :: GlTF.Node.Node -> Node
 adaptNode GlTF.Node.Node{..} = Node
-  { rotation = toV4 <$> rotation,
-    scale = toV3 <$> scale,
-    translation = toV3 <$> translation,
-    weights = maybe [] toList weights,
-    name = name
+  { nodeMeshId = GlTF.Mesh.unMeshIx <$> mesh,
+    nodeName = name,
+    nodeRotation = toV4 <$> rotation,
+    nodeScale = toV3 <$> scale,
+    nodeTranslation = toV3 <$> translation,
+    nodeWeights = maybe [] toList weights
   }
 
 toV3 :: (a, a, a) -> V3 a
