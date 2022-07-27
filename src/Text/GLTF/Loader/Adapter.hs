@@ -2,7 +2,9 @@
 module Text.GLTF.Loader.Adapter
   ( adaptGltf,
     adaptAsset,
+    adaptMeshes,
     adaptNodes,
+    adaptMesh,
     adaptNode
   ) where
 
@@ -18,6 +20,7 @@ import qualified Codec.GlTF.Node as GlTF.Node
 adaptGltf :: GlTF.GlTF -> Gltf
 adaptGltf GlTF.GlTF{..} = Gltf
   { gltfAsset = adaptAsset asset,
+    gltfMeshes = adaptMeshes meshes,
     gltfNodes = adaptNodes nodes
   }
 
@@ -29,8 +32,18 @@ adaptAsset GlTF.Asset.Asset{..} = Asset
     assetMinVersion = minVersion
   }
 
+adaptMeshes :: Maybe (Vector GlTF.Mesh.Mesh) -> [Mesh]
+adaptMeshes = maybe [] (map adaptMesh . toList)
+
 adaptNodes :: Maybe (Vector GlTF.Node.Node) -> [Node]
 adaptNodes = maybe [] (map adaptNode . toList)
+
+adaptMesh :: GlTF.Mesh.Mesh -> Mesh
+adaptMesh GlTF.Mesh.Mesh{..} = Mesh
+  { meshPrimitives = map (const MeshPrimitive) $ toList primitives,
+    meshWeights = maybe [] toList weights,
+    meshName = name
+  }
 
 adaptNode :: GlTF.Node.Node -> Node
 adaptNode GlTF.Node.Node{..} = Node

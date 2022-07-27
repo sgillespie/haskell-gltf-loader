@@ -31,6 +31,14 @@ spec = do
                   assetMinVersion = Nothing
                 },
 
+              gltfMeshes
+                = [ Mesh
+                     { meshPrimitives = [MeshPrimitive],
+                       meshWeights = [],
+                       meshName = Just "Cube"
+                     }
+                  ],
+
               gltfNodes
                 = [ Node
                       { nodeMeshId = Just 0,

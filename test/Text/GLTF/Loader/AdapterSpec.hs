@@ -21,6 +21,17 @@ spec = do
     it "Adapts a basic asset" $ 
       adaptAsset codecAsset `shouldBe` loaderAsset
 
+  describe "adaptMeshes" $ do
+    it "Adapts a list of nodes" $ do
+      let meshes = Just [codecMesh, codecMesh { GlTF.Mesh.weights = Just [3.1] }]
+          adaptedMeshes = [loaderMesh, set _meshWeights [3.1] loaderMesh]
+
+      adaptMeshes meshes `shouldBe` adaptedMeshes
+
+    it "Adapts empty meshes" $ do
+      adaptMeshes (Just []) `shouldBe` []
+      adaptMeshes Nothing `shouldBe` []
+
   describe "adaptNodes" $ do
     it "Adapts a list of nodes" $ do
       let nodes = Just [codecNode, codecNode { GlTF.Node.rotation = Nothing }]
@@ -30,6 +41,15 @@ spec = do
       adaptNodes (Just []) `shouldBe` []
       adaptNodes Nothing `shouldBe` []
 
+  describe "adaptMesh" $ do
+    it "Adapts a basic mesh" $
+      adaptMesh codecMesh `shouldBe` loaderMesh
+
+    it "Adapts empty weights" $ do
+      let meshEmptyWeight = set _meshWeights [] loaderMesh
+      adaptMesh (codecMesh { GlTF.Mesh.weights = Nothing }) `shouldBe` meshEmptyWeight
+      adaptMesh (codecMesh { GlTF.Mesh.weights = Just [] }) `shouldBe` meshEmptyWeight
+  
   describe "adaptNode" $ do
     it "Adapts a basic node" $ do
       adaptNode codecNode `shouldBe` loaderNode
@@ -51,7 +71,7 @@ codecGltf = GlTF.GlTF
     cameras = Nothing,
     images = Nothing,
     materials = Nothing,
-    meshes = Nothing,
+    meshes = Just [codecMesh],
     nodes = Just [codecNode],
     samplers = Nothing,
     scenes = Nothing,
@@ -64,6 +84,7 @@ codecGltf = GlTF.GlTF
 loaderGltf :: Gltf
 loaderGltf = Gltf
   { gltfAsset = loaderAsset,
+    gltfMeshes = [loaderMesh],
     gltfNodes = [loaderNode]
   }
 
@@ -83,6 +104,22 @@ loaderAsset = Asset
     assetCopyright = Just "copyright",
     assetGenerator = Just "generator",
     assetMinVersion = Just "minVersion"
+  }
+
+codecMesh :: GlTF.Mesh.Mesh
+codecMesh = GlTF.Mesh.Mesh
+  { primitives = [],
+    weights = Just [1.2],
+    name = Just "mesh",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+loaderMesh :: Mesh
+loaderMesh = Mesh
+  { meshPrimitives = [],
+    meshWeights = [1.2],
+    meshName = Just "mesh"
   }
 
 codecNode :: GlTF.Node.Node

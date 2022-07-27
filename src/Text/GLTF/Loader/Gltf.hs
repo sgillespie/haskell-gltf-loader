@@ -2,14 +2,20 @@ module Text.GLTF.Loader.Gltf
   ( -- * Data constructors
     Gltf(..),
     Asset(..),
+    Mesh(..),
     Node(..),
+    MeshPrimitive(..),
     -- * Lenses
     _asset,
+    _meshes,
+    _nodes,
     _assetVersion,
     _assetCopyright,
     _assetGenerator,
     _assetMinVersion,
-    _nodes,
+    _meshPrimitives,
+    _meshWeights,
+    _meshName,
     _nodeMeshId,
     _nodeName,
     _nodeRotation,
@@ -24,6 +30,7 @@ import RIO
 
 data Gltf = Gltf
   { gltfAsset :: Asset,
+    gltfMeshes :: [Mesh],
     gltfNodes :: [Node] }
   deriving (Eq, Show)
 
@@ -32,6 +39,12 @@ data Asset = Asset
     assetCopyright :: Maybe Text,
     assetGenerator :: Maybe Text,
     assetMinVersion :: Maybe Text
+  } deriving (Eq, Show)
+
+data Mesh = Mesh
+  { meshPrimitives :: [MeshPrimitive],
+    meshWeights :: [Float],
+    meshName :: Maybe Text
   } deriving (Eq, Show)
 
 data Node = Node
@@ -43,8 +56,14 @@ data Node = Node
     nodeWeights :: [Float]
   } deriving (Eq, Show)
 
+data MeshPrimitive = MeshPrimitive
+  deriving (Eq, Show)
+
 _asset :: Lens' Gltf Asset
 _asset = lens gltfAsset (\gltf asset -> gltf { gltfAsset = asset })
+
+_meshes :: Lens' Gltf [Mesh]
+_meshes = lens gltfMeshes (\gltf meshes -> gltf { gltfMeshes = meshes })
 
 _nodes :: Lens' Gltf [Node]
 _nodes = lens gltfNodes (\gltf nodes -> gltf { gltfNodes = nodes })
@@ -66,6 +85,17 @@ _assetMinVersion :: Lens' Asset (Maybe Text)
 _assetMinVersion = lens
   assetMinVersion
   (\asset minVersion' -> asset { assetMinVersion = minVersion' })
+
+_meshPrimitives :: Lens' Mesh [MeshPrimitive]
+_meshPrimitives = lens
+  meshPrimitives
+  (\mesh primitives -> mesh { meshPrimitives = primitives })
+  
+_meshWeights :: Lens' Mesh [Float]
+_meshWeights = lens meshWeights (\mesh weights -> mesh { meshWeights = weights })
+
+_meshName :: Lens' Mesh (Maybe Text)
+_meshName = lens meshName (\mesh name -> mesh { meshName = name })
 
 _nodeMeshId :: Lens' Node (Maybe Int)
 _nodeMeshId = lens nodeMeshId (\node meshId -> node { nodeMeshId = meshId })
