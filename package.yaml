@@ -75,6 +75,7 @@ library:
   source-dirs: src
   dependencies:
     - gltf-codec
+    - unordered-containers
 
 executables:
   gltf-loader-exe:
@@ -97,6 +98,7 @@ tests:
       - gltf-loader
       - gltf-codec
       - hspec
+      - unordered-containers
 
     ghc-options:
       - -threaded

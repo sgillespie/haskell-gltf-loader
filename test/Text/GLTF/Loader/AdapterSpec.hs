@@ -10,6 +10,7 @@ import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as GlTF.Asset
 import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
+import qualified Data.HashMap.Strict as HashMap
 
 spec :: Spec
 spec = do
@@ -58,6 +59,36 @@ spec = do
       let nodeEmptyWeight = set _nodeWeights [] loaderNode
       adaptNode (codecNode { GlTF.Node.weights = Nothing }) `shouldBe` nodeEmptyWeight
       adaptNode (codecNode { GlTF.Node.weights = Just [] }) `shouldBe` nodeEmptyWeight
+
+  describe "adaptMeshPrimitives" $
+    it "adapts a list of primitives" $ do
+      let primitives
+            = [ codecMeshPrimitive,
+                codecMeshPrimitive { GlTF.Mesh.mode = GlTF.Mesh.MeshPrimitiveMode 0 }
+              ]
+
+          expectedResult
+            = [ loaderMeshPrimitive,
+                set _meshPrimitiveMode Points loaderMeshPrimitive
+              ]
+      
+      adaptMeshPrimitives primitives `shouldBe` expectedResult
+
+  describe "adaptMeshPrimitive" $
+    it "adapts a basic primitive" $ do
+      adaptMeshPrimitive codecMeshPrimitive `shouldBe` loaderMeshPrimitive
+    
+  describe "adaptMeshPrimitiveMode" $
+    it "Adapts all expected modes" $ do
+      adaptMeshPrimitiveMode GlTF.Mesh.POINTS `shouldBe` Points
+      adaptMeshPrimitiveMode GlTF.Mesh.LINES `shouldBe` Lines
+      adaptMeshPrimitiveMode GlTF.Mesh.LINE_LOOP `shouldBe` LineLoop
+      adaptMeshPrimitiveMode GlTF.Mesh.LINE_STRIP `shouldBe` LineStrip
+      adaptMeshPrimitiveMode GlTF.Mesh.TRIANGLES `shouldBe` Triangles
+      adaptMeshPrimitiveMode GlTF.Mesh.TRIANGLE_STRIP `shouldBe` TriangleStrip
+      adaptMeshPrimitiveMode GlTF.Mesh.TRIANGLE_FAN `shouldBe` TriangleFan
+      evaluate (adaptMeshPrimitiveMode $ GlTF.Mesh.MeshPrimitiveMode 7)
+        `shouldThrow` anyErrorCall
 
 codecGltf :: GlTF.GlTF
 codecGltf = GlTF.GlTF
@@ -108,7 +139,7 @@ loaderAsset = Asset
 
 codecMesh :: GlTF.Mesh.Mesh
 codecMesh = GlTF.Mesh.Mesh
-  { primitives = [],
+  { primitives = [codecMeshPrimitive],
     weights = Just [1.2],
     name = Just "mesh",
     extensions = Nothing,
@@ -117,7 +148,7 @@ codecMesh = GlTF.Mesh.Mesh
 
 loaderMesh :: Mesh
 loaderMesh = Mesh
-  { meshPrimitives = [],
+  { meshPrimitives = [loaderMeshPrimitive],
     meshWeights = [1.2],
     meshName = Just "mesh"
   }
@@ -146,4 +177,23 @@ loaderNode = Node
     nodeScale = Just $ V3 5 6 7,
     nodeTranslation = Just $ V3 8 9 10,
     nodeWeights = [11, 12, 13]
+  }
+
+codecMeshPrimitive :: GlTF.Mesh.MeshPrimitive
+codecMeshPrimitive = GlTF.Mesh.MeshPrimitive
+  { attributes = HashMap.empty,
+    mode = GlTF.Mesh.MeshPrimitiveMode 4,
+    indices = Nothing,
+    material = Nothing,
+    targets = Nothing,
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+loaderMeshPrimitive :: MeshPrimitive
+loaderMeshPrimitive = MeshPrimitive
+  { meshPrimitiveMode = Triangles,
+    vertexIndices = [],
+    vertexPositions = [],
+    vertexNormals = []
   }

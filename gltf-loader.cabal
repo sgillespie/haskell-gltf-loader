@@ -82,6 +82,7 @@ library
     , linear
     , microlens
     , rio >=0.1.12.0
+    , unordered-containers
   default-language: Haskell2010
 
 executable gltf-loader-exe
@@ -199,4 +200,5 @@ test-suite gltf-loader-test
     , linear
     , microlens
     , rio >=0.1.12.0
+    , unordered-containers
   default-language: Haskell2010

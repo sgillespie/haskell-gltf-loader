@@ -33,7 +33,14 @@ spec = do
 
               gltfMeshes
                 = [ Mesh
-                     { meshPrimitives = [MeshPrimitive],
+                     { meshPrimitives
+                         = [ MeshPrimitive
+                               { meshPrimitiveMode = Triangles,
+                                 vertexIndices = [],
+                                 vertexPositions = [],
+                                 vertexNormals = []
+                               }
+                           ],
                        meshWeights = [],
                        meshName = Just "Cube"
                      }

@@ -5,6 +5,7 @@ module Text.GLTF.Loader.Gltf
     Mesh(..),
     Node(..),
     MeshPrimitive(..),
+    MeshPrimitiveMode(..),
     -- * Lenses
     _asset,
     _meshes,
@@ -14,6 +15,7 @@ module Text.GLTF.Loader.Gltf
     _assetGenerator,
     _assetMinVersion,
     _meshPrimitives,
+    _meshPrimitiveMode,
     _meshWeights,
     _meshName,
     _nodeMeshId,
@@ -57,7 +59,21 @@ data Node = Node
   } deriving (Eq, Show)
 
 data MeshPrimitive = MeshPrimitive
-  deriving (Eq, Show)
+  { meshPrimitiveMode :: MeshPrimitiveMode,
+    vertexIndices :: [Int],
+    vertexPositions :: [V3 Float],
+    vertexNormals :: [V3 Float]
+  } deriving (Eq, Show)
+
+data MeshPrimitiveMode
+  = Points
+  | Lines
+  | LineLoop
+  | LineStrip
+  | Triangles
+  | TriangleStrip
+  | TriangleFan
+  deriving (Eq, Enum, Show)
 
 _asset :: Lens' Gltf Asset
 _asset = lens gltfAsset (\gltf asset -> gltf { gltfAsset = asset })
@@ -90,6 +106,11 @@ _meshPrimitives :: Lens' Mesh [MeshPrimitive]
 _meshPrimitives = lens
   meshPrimitives
   (\mesh primitives -> mesh { meshPrimitives = primitives })
+
+_meshPrimitiveMode :: Lens' MeshPrimitive MeshPrimitiveMode
+_meshPrimitiveMode = lens
+  meshPrimitiveMode
+  (\primitive mode -> primitive { meshPrimitiveMode = mode })
   
 _meshWeights :: Lens' Mesh [Float]
 _meshWeights = lens meshWeights (\mesh weights -> mesh { meshWeights = weights })
