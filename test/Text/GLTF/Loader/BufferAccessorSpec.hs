@@ -17,7 +17,7 @@ import qualified Codec.GlTF.URI as URI
 
 spec :: Spec
 spec = do
-  let gltf = mkGltf
+  let gltf = mkCodecGltf
   
   describe "loadBuffers" $ do
     it "Reads buffers from GlTF" $ do
@@ -31,7 +31,7 @@ spec = do
     it "Handles malformed URI" $ do
       let gltf' = gltf
             { GlTF.buffers = Just
-                [ mkBuffer { Buffer.uri = Just $ URI.URI "uh oh!" } ]
+                [ mkCodecBuffer { Buffer.uri = Just $ URI.URI "uh oh!" } ]
             }
 
       loadBuffers gltf' `shouldThrow` anyException
@@ -52,7 +52,7 @@ spec = do
       vertexIndices gltf' buffers' accessorId `shouldBe` []
 
     it "Returns empty when buffer not found" $ do
-      let bufferView = mkBufferView { BufferView.buffer = Buffer.BufferIx 1 }
+      let bufferView = mkCodecBufferView { BufferView.buffer = Buffer.BufferIx 1 }
           gltf' = gltf { GlTF.bufferViews = Just [bufferView] }
       vertexIndices gltf' buffers' accessorId `shouldBe` []
 

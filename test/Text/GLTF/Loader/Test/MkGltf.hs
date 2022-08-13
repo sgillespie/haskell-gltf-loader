@@ -10,22 +10,25 @@ import qualified Codec.GlTF.Accessor as Accessor
 import qualified Codec.GlTF.Asset as Asset
 import qualified Codec.GlTF.Buffer as Buffer
 import qualified Codec.GlTF.BufferView as BufferView
+import qualified Codec.GlTF.Mesh as Mesh
+import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.URI as URI
+import qualified Data.HashMap.Strict as HashMap
 
-mkGltf :: GlTF.GlTF
-mkGltf = GlTF.GlTF
-  { asset = mkAsset,
+mkCodecGltf :: GlTF.GlTF
+mkCodecGltf = GlTF.GlTF
+  { asset = mkCodecAsset,
     extensionsUsed = Nothing,
     extensionsRequired = Nothing,
-    accessors = Just [mkAccessor],
+    accessors = Just [mkCodecAccessor],
     animations = Nothing,
-    buffers = Just [mkBuffer],
-    bufferViews = Just [mkBufferView],
+    buffers = Just [mkCodecBuffer],
+    bufferViews = Just [mkCodecBufferView],
     cameras = Nothing,
     images = Nothing,
     materials = Nothing,
-    meshes = Nothing,
-    nodes = Nothing,
+    meshes = Just [mkCodecMesh],
+    nodes = Just [mkCodecNode],
     samplers = Nothing,
     scenes = Nothing,
     skins = Nothing,
@@ -34,8 +37,8 @@ mkGltf = GlTF.GlTF
     extras = Nothing
   }
 
-mkAsset :: Asset.Asset
-mkAsset = Asset.Asset
+mkCodecAsset :: Asset.Asset
+mkCodecAsset = Asset.Asset
   { version = "version",
     copyright = Just "copyright",
     generator = Just "generator",
@@ -44,8 +47,8 @@ mkAsset = Asset.Asset
     extras = Nothing
   }
 
-mkAccessor :: Accessor.Accessor
-mkAccessor = Accessor.Accessor
+mkCodecAccessor :: Accessor.Accessor
+mkCodecAccessor = Accessor.Accessor
   {
     bufferView = Just $ BufferView.BufferViewIx 0,
     byteOffset = 0,
@@ -61,8 +64,8 @@ mkAccessor = Accessor.Accessor
     type' = Accessor.AttributeType "SCALAR"
   }
 
-mkBufferView :: BufferView.BufferView
-mkBufferView = BufferView.BufferView
+mkCodecBufferView :: BufferView.BufferView
+mkCodecBufferView = BufferView.BufferView
   { buffer = Buffer.BufferIx 0,
     byteOffset = 0,
     byteLength = sizeOf (undefined :: Word16) * 4,
@@ -73,17 +76,53 @@ mkBufferView = BufferView.BufferView
     extras = Nothing
   }
 
-mkBuffer :: Buffer.Buffer
-mkBuffer = Buffer.Buffer
+mkCodecBuffer :: Buffer.Buffer
+mkCodecBuffer = Buffer.Buffer
   { byteLength = sizeOf (undefined :: Word16) * 4,
-    uri = Just mkBufferUri,
+    uri = Just mkCodecBufferUri,
     extensions = Nothing,
     extras = Nothing,
     name = Just "Buffer"
   }
 
-mkBufferUri :: URI.URI
-mkBufferUri = URI.URI uriText
+mkCodecMesh :: Mesh.Mesh
+mkCodecMesh = Mesh.Mesh
+  { primitives = [mkCodecMeshPrimitive],
+    weights = Just [1.2],
+    name = Just "mesh",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+mkCodecBufferUri :: URI.URI
+mkCodecBufferUri = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
         encodedText = encodeBase64. toStrict . toLazyByteString $ putIndices
         putIndices = foldr ((<>) . putWord16le) empty ([1..4] :: [Word16])
+
+mkCodecMeshPrimitive :: Mesh.MeshPrimitive
+mkCodecMeshPrimitive = Mesh.MeshPrimitive
+  { attributes = HashMap.empty,
+    mode = Mesh.MeshPrimitiveMode 4,
+    indices = Nothing,
+    material = Nothing,
+    targets = Nothing,
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+mkCodecNode :: Node.Node
+mkCodecNode = Node.Node
+  { camera = Nothing,
+    children = Nothing,
+    skin = Nothing,
+    matrix = Nothing,
+    mesh = Just (Mesh.MeshIx 5),
+    rotation = Just (1, 2, 3, 4),
+    scale = Just (5, 6, 7),
+    translation = Just (8, 9, 10),
+    weights = Just [11, 12, 13],
+    name = Just "node",
+    extensions = Nothing,
+    extras = Nothing
+  }
