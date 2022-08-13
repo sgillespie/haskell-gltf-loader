@@ -11,6 +11,7 @@ module Text.GLTF.Loader.Adapter
     adaptMeshPrimitiveMode
   ) where
 
+import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
 
 import Linear (V3(..), V4(..))
@@ -21,12 +22,12 @@ import qualified Codec.GlTF.Asset as GlTF.Asset
 import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
 
-adaptGltf :: GlTF.GlTF -> Gltf
-adaptGltf GlTF.GlTF{..} = Gltf
-  { gltfAsset = adaptAsset asset,
-    gltfMeshes = adaptMeshes meshes,
-    gltfNodes = adaptNodes nodes
-  }
+adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Gltf
+adaptGltf gltf@GlTF.GlTF{..} buffers' = Gltf
+    { gltfAsset = adaptAsset asset,
+      gltfMeshes = adaptMeshes gltf buffers' meshes,
+      gltfNodes = adaptNodes nodes
+    }
 
 adaptAsset :: GlTF.Asset.Asset -> Asset
 adaptAsset GlTF.Asset.Asset{..} = Asset
@@ -36,18 +37,26 @@ adaptAsset GlTF.Asset.Asset{..} = Asset
     assetMinVersion = minVersion
   }
 
-adaptMeshes :: Maybe (Vector GlTF.Mesh.Mesh) -> [Mesh]
-adaptMeshes = maybe [] (map adaptMesh . toList)
+adaptMeshes
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> Maybe (Vector GlTF.Mesh.Mesh)
+  -> [Mesh]
+adaptMeshes gltf buffers' = maybe [] (map (adaptMesh gltf buffers') . toList)
 
 adaptNodes :: Maybe (Vector GlTF.Node.Node) -> [Node]
 adaptNodes = maybe [] (map adaptNode . toList)
 
-adaptMesh :: GlTF.Mesh.Mesh -> Mesh
-adaptMesh GlTF.Mesh.Mesh{..} = Mesh
-  { meshPrimitives = adaptMeshPrimitives primitives,
-    meshWeights = maybe [] toList weights,
-    meshName = name
-  }
+adaptMesh
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> GlTF.Mesh.Mesh
+  -> Mesh
+adaptMesh gltf buffers' GlTF.Mesh.Mesh{..} = Mesh
+    { meshPrimitives = adaptMeshPrimitives gltf buffers' primitives,
+      meshWeights = maybe [] toList weights,
+      meshName = name
+    }
 
 adaptNode :: GlTF.Node.Node -> Node
 adaptNode GlTF.Node.Node{..} = Node
@@ -59,16 +68,24 @@ adaptNode GlTF.Node.Node{..} = Node
     nodeWeights = maybe [] toList weights
   }
 
-adaptMeshPrimitives :: Vector GlTF.Mesh.MeshPrimitive -> [MeshPrimitive]
-adaptMeshPrimitives = map adaptMeshPrimitive . toList
+adaptMeshPrimitives
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> Vector GlTF.Mesh.MeshPrimitive
+  -> [MeshPrimitive]
+adaptMeshPrimitives gltf buffers' = map (adaptMeshPrimitive gltf buffers') . toList
 
-adaptMeshPrimitive :: GlTF.Mesh.MeshPrimitive -> MeshPrimitive
-adaptMeshPrimitive GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
-  { meshPrimitiveMode = adaptMeshPrimitiveMode mode,
-    vertexIndices = [],
-    vertexPositions = [],
-    vertexNormals = []
-  }
+adaptMeshPrimitive
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> GlTF.Mesh.MeshPrimitive
+  -> MeshPrimitive
+adaptMeshPrimitive gltf buffers' GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
+    { meshPrimitiveMode = adaptMeshPrimitiveMode mode,
+      meshPrimitiveIndices = maybe [] (vertexIndices gltf buffers') indices,
+      vertexPositions = [],
+      vertexNormals = []
+    }
 
 adaptMeshPrimitiveMode :: GlTF.Mesh.MeshPrimitiveMode -> MeshPrimitiveMode
 adaptMeshPrimitiveMode = toEnum . GlTF.Mesh.unMeshPrimitiveMode

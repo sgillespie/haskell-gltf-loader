@@ -11,10 +11,12 @@ spec = do
   describe "fromByteString" $ do
     it "Parses embedded gltf content" $ do
       gltfText <- readFileBinary "data/cube.gltf"
-      fromByteString gltfText `shouldSatisfy` has _Right
+      res <- fromByteString gltfText
+      res `shouldSatisfy` has _Right
 
     it "Fails on invalid content" $ do
-      fromByteString "Invalid GLTF" `shouldSatisfy` has (_Left . _ReadError)
+      res <- fromByteString "Invalid GLTF"
+      res `shouldSatisfy` has (_Left . _ReadError)
 
   describe "fromFile" $ do
     it "Parses embedded gltf file" $ do
@@ -36,7 +38,11 @@ spec = do
                      { meshPrimitives
                          = [ MeshPrimitive
                                { meshPrimitiveMode = Triangles,
-                                 vertexIndices = [],
+                                 meshPrimitiveIndices
+                                   = [ 1, 14, 20, 1, 20, 7, 10, 6, 19, 10, 19, 23,
+                                       21, 18, 12, 21, 12, 15, 16, 3, 9, 16, 9,
+                                       22, 5, 2, 8, 5, 8, 11, 17, 13, 0, 17, 0, 4
+                                     ],
                                  vertexPositions = [],
                                  vertexNormals = []
                                }

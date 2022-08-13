@@ -1,6 +1,7 @@
 module Text.GLTF.Loader.AdapterSpec (spec) where
 
 import Text.GLTF.Loader.Adapter
+import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
 
 import Linear (V3(..), V4(..))
@@ -16,7 +17,7 @@ spec :: Spec
 spec = do
   describe "adaptGltf" $ do
     it "Adapts a basic GlTF" $
-      adaptGltf codecGltf `shouldBe` loaderGltf
+      adaptGltf codecGltf buffers `shouldBe` loaderGltf
 
   describe "adaptAsset" $ do
     it "Adapts a basic asset" $ 
@@ -27,11 +28,11 @@ spec = do
       let meshes = Just [codecMesh, codecMesh { GlTF.Mesh.weights = Just [3.1] }]
           adaptedMeshes = [loaderMesh, set _meshWeights [3.1] loaderMesh]
 
-      adaptMeshes meshes `shouldBe` adaptedMeshes
+      adaptMeshes codecGltf buffers meshes `shouldBe` adaptedMeshes
 
     it "Adapts empty meshes" $ do
-      adaptMeshes (Just []) `shouldBe` []
-      adaptMeshes Nothing `shouldBe` []
+      adaptMeshes codecGltf buffers (Just []) `shouldBe` []
+      adaptMeshes codecGltf buffers Nothing `shouldBe` []
 
   describe "adaptNodes" $ do
     it "Adapts a list of nodes" $ do
@@ -44,12 +45,12 @@ spec = do
 
   describe "adaptMesh" $ do
     it "Adapts a basic mesh" $
-      adaptMesh codecMesh `shouldBe` loaderMesh
+      adaptMesh codecGltf buffers codecMesh `shouldBe` loaderMesh
 
     it "Adapts empty weights" $ do
       let meshEmptyWeight = set _meshWeights [] loaderMesh
-      adaptMesh (codecMesh { GlTF.Mesh.weights = Nothing }) `shouldBe` meshEmptyWeight
-      adaptMesh (codecMesh { GlTF.Mesh.weights = Just [] }) `shouldBe` meshEmptyWeight
+      adaptMesh codecGltf buffers (codecMesh { GlTF.Mesh.weights = Nothing }) `shouldBe` meshEmptyWeight
+      adaptMesh codecGltf buffers (codecMesh { GlTF.Mesh.weights = Just [] }) `shouldBe` meshEmptyWeight
   
   describe "adaptNode" $ do
     it "Adapts a basic node" $ do
@@ -72,11 +73,11 @@ spec = do
                 set _meshPrimitiveMode Points loaderMeshPrimitive
               ]
       
-      adaptMeshPrimitives primitives `shouldBe` expectedResult
+      adaptMeshPrimitives codecGltf buffers primitives `shouldBe` expectedResult
 
   describe "adaptMeshPrimitive" $
     it "adapts a basic primitive" $ do
-      adaptMeshPrimitive codecMeshPrimitive `shouldBe` loaderMeshPrimitive
+      adaptMeshPrimitive codecGltf buffers codecMeshPrimitive `shouldBe` loaderMeshPrimitive
     
   describe "adaptMeshPrimitiveMode" $
     it "Adapts all expected modes" $ do
@@ -89,6 +90,9 @@ spec = do
       adaptMeshPrimitiveMode GlTF.Mesh.TRIANGLE_FAN `shouldBe` TriangleFan
       evaluate (adaptMeshPrimitiveMode $ GlTF.Mesh.MeshPrimitiveMode 7)
         `shouldThrow` anyErrorCall
+
+buffers :: Vector GltfBuffer
+buffers = undefined
 
 codecGltf :: GlTF.GlTF
 codecGltf = GlTF.GlTF
@@ -193,7 +197,7 @@ codecMeshPrimitive = GlTF.Mesh.MeshPrimitive
 loaderMeshPrimitive :: MeshPrimitive
 loaderMeshPrimitive = MeshPrimitive
   { meshPrimitiveMode = Triangles,
-    vertexIndices = [],
+    meshPrimitiveIndices = [],
     vertexPositions = [],
     vertexNormals = []
   }

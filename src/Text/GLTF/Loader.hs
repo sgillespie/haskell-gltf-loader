@@ -7,21 +7,24 @@ module Text.GLTF.Loader
   ) where
 
 import Text.GLTF.Loader.Adapter
+import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Errors
 import Text.GLTF.Loader.Gltf
 
 import Data.Either
+import Lens.Micro
 import RIO
-import RIO.Lens
 import qualified Codec.GlTF as GlTF
 
-fromByteString :: ByteString -> Either Errors Gltf
+fromByteString :: MonadUnliftIO io => ByteString -> io (Either Errors Gltf)
 fromByteString =  toGltfResult . GlTF.fromByteString
 
-fromFile :: FilePath -> IO (Either Errors Gltf)
-fromFile path = toGltfResult <$> GlTF.fromFile path
+fromFile :: MonadUnliftIO io => FilePath -> io (Either Errors Gltf)
+fromFile path = liftIO (GlTF.fromFile path) >>= toGltfResult
   
-toGltfResult :: Either String GlTF.GlTF -> Either Errors Gltf
-toGltfResult res = res
-  & over _Left (ReadError . fromString)
-  & over _Right adaptGltf
+toGltfResult :: MonadUnliftIO io => Either String GlTF.GlTF -> io (Either Errors Gltf)
+toGltfResult res
+  = res
+    & over _Left (ReadError . fromString)
+    & traverseOf _Right toGltfResult'
+  where toGltfResult' gltf = adaptGltf gltf <$> loadBuffers gltf

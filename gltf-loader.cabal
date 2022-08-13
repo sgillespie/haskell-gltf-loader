@@ -30,6 +30,7 @@ library
   exposed-modules:
       Text.GLTF.Loader
       Text.GLTF.Loader.Adapter
+      Text.GLTF.Loader.BufferAccessor
       Text.GLTF.Loader.Errors
       Text.GLTF.Loader.Gltf
   other-modules:
@@ -78,6 +79,8 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.11 && <10
+    , binary
+    , bytestring
     , gltf-codec
     , linear
     , microlens
@@ -148,6 +151,8 @@ test-suite gltf-loader-test
   main-is: Spec.hs
   other-modules:
       Text.GLTF.Loader.AdapterSpec
+      Text.GLTF.Loader.BufferAccessorSpec
+      Text.GLTF.Loader.Test.MkGltf
       Text.GLTF.LoaderSpec
       Paths_gltf_loader
   hs-source-dirs:
@@ -194,6 +199,9 @@ test-suite gltf-loader-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.11 && <10
+    , base64
+    , binary
+    , bytestring
     , gltf-codec
     , gltf-loader
     , hspec

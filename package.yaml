@@ -74,6 +74,8 @@ default-extensions:
 library:
   source-dirs: src
   dependencies:
+    - binary
+    - bytestring
     - gltf-codec
     - unordered-containers
 
@@ -95,6 +97,9 @@ tests:
     main: Spec.hs
     source-dirs: test
     dependencies:
+      - base64
+      - binary
+      - bytestring
       - gltf-loader
       - gltf-codec
       - hspec
