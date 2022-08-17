@@ -1,9 +1,13 @@
 module Text.GLTF.Loader.Test.MkGltf where
 
+import Text.GLTF.Loader.Adapter (attributePosition)
+
 import Data.Binary.Builder
+import Data.Binary.Put (putFloatle, runPut)
 import Data.ByteString.Base64 (encodeBase64)
 import Data.ByteString.Lazy (toStrict)
 import Foreign (Storable(..))
+import Linear (V3(..))
 import RIO
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Accessor as Accessor
@@ -20,10 +24,10 @@ mkCodecGltf = GlTF.GlTF
   { asset = mkCodecAsset,
     extensionsUsed = Nothing,
     extensionsRequired = Nothing,
-    accessors = Just [mkCodecAccessor],
+    accessors = Just [mkCodecAccessorIndices, mkCodecAccessorPositions],
     animations = Nothing,
-    buffers = Just [mkCodecBuffer],
-    bufferViews = Just [mkCodecBufferView],
+    buffers = Just [mkCodecBufferIndices, mkCodecBufferPositions],
+    bufferViews = Just [mkCodecBufferViewIndices, mkCodecBufferViewPositions],
     cameras = Nothing,
     images = Nothing,
     materials = Nothing,
@@ -47,8 +51,8 @@ mkCodecAsset = Asset.Asset
     extras = Nothing
   }
 
-mkCodecAccessor :: Accessor.Accessor
-mkCodecAccessor = Accessor.Accessor
+mkCodecAccessorIndices :: Accessor.Accessor
+mkCodecAccessorIndices = Accessor.Accessor
   {
     bufferView = Just $ BufferView.BufferViewIx 0,
     byteOffset = 0,
@@ -58,31 +62,69 @@ mkCodecAccessor = Accessor.Accessor
     extras = Nothing,
     max = Nothing,
     min = Nothing,
-    name = Just "Accessor",
+    name = Just "Accessor Indices",
     normalized = False,
     sparse = Nothing,
     type' = Accessor.AttributeType "SCALAR"
   }
 
-mkCodecBufferView :: BufferView.BufferView
-mkCodecBufferView = BufferView.BufferView
+mkCodecAccessorPositions :: Accessor.Accessor
+mkCodecAccessorPositions = Accessor.Accessor
+  {
+    bufferView = Just $ BufferView.BufferViewIx 1,
+    byteOffset = 0,
+    componentType = Accessor.ComponentType 5126,
+    count = 4,
+    extensions = Nothing,
+    extras = Nothing,
+    max = Nothing,
+    min = Nothing,
+    name = Just "Accessor Positions",
+    normalized = False,
+    sparse = Nothing,
+    type' = Accessor.AttributeType "VEC3"
+  }
+
+mkCodecBufferViewIndices :: BufferView.BufferView
+mkCodecBufferViewIndices = BufferView.BufferView
   { buffer = Buffer.BufferIx 0,
     byteOffset = 0,
     byteLength = sizeOf (undefined :: Word16) * 4,
     byteStride = Nothing,
     target = Nothing,
-    name = Just "BufferView",
+    name = Just "BufferView Indices",
     extensions = Nothing,
     extras = Nothing
   }
 
-mkCodecBuffer :: Buffer.Buffer
-mkCodecBuffer = Buffer.Buffer
+mkCodecBufferViewPositions :: BufferView.BufferView
+mkCodecBufferViewPositions = BufferView.BufferView
+  { buffer = Buffer.BufferIx 1,
+    byteOffset = 0,
+    byteLength = sizeOf (undefined :: V3 Float) * 4,
+    byteStride = Nothing,
+    target = Nothing,
+    name = Just "BufferView Positions",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+mkCodecBufferIndices :: Buffer.Buffer
+mkCodecBufferIndices = Buffer.Buffer
   { byteLength = sizeOf (undefined :: Word16) * 4,
-    uri = Just mkCodecBufferUri,
+    uri = Just mkCodecBufferUriIndices,
     extensions = Nothing,
     extras = Nothing,
-    name = Just "Buffer"
+    name = Just "Buffer Indices"
+  }
+
+mkCodecBufferPositions :: Buffer.Buffer
+mkCodecBufferPositions = Buffer.Buffer
+  { byteLength = sizeOf (undefined :: V3 Float) * 4,
+    uri = Just mkCodecBufferUriPositions,
+    extensions = Nothing,
+    extras = Nothing,
+    name = Just "Buffer Positions"
   }
 
 mkCodecMesh :: Mesh.Mesh
@@ -94,17 +136,24 @@ mkCodecMesh = Mesh.Mesh
     extras = Nothing
   }
 
-mkCodecBufferUri :: URI.URI
-mkCodecBufferUri = URI.URI uriText
+mkCodecBufferUriIndices :: URI.URI
+mkCodecBufferUriIndices = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
         encodedText = encodeBase64. toStrict . toLazyByteString $ putIndices
         putIndices = foldr ((<>) . putWord16le) empty ([1..4] :: [Word16])
 
+mkCodecBufferUriPositions :: URI.URI
+mkCodecBufferUriPositions = URI.URI uriText
+  where uriText = "data:application/octet-stream;base64," <> encodedText
+        encodedText = encodeBase64. toStrict . runPut $ putPositions
+        putPositions = mapM_ (replicateM_ 3 . putFloatle) ([1..4] :: [Float])
+
 mkCodecMeshPrimitive :: Mesh.MeshPrimitive
 mkCodecMeshPrimitive = Mesh.MeshPrimitive
-  { attributes = HashMap.empty,
+  { attributes = HashMap.fromList
+      [(attributePosition, Accessor.AccessorIx 1)],
     mode = Mesh.MeshPrimitiveMode 4,
-    indices = Nothing,
+    indices = Just $ Accessor.AccessorIx 0,
     material = Nothing,
     targets = Nothing,
     extensions = Nothing,

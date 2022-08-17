@@ -17,6 +17,8 @@ module Text.GLTF.Loader.Gltf
     _meshPrimitives,
     _meshPrimitiveMode,
     _meshPrimitiveIndices,
+    _meshPrimitivePositions,
+    _meshPrimitiveNormals,
     _meshWeights,
     _meshName,
     _nodeMeshId,
@@ -62,8 +64,8 @@ data Node = Node
 data MeshPrimitive = MeshPrimitive
   { meshPrimitiveMode :: MeshPrimitiveMode,
     meshPrimitiveIndices :: [Int],
-    vertexPositions :: [V3 Float],
-    vertexNormals :: [V3 Float]
+    meshPrimitivePositions :: [V3 Float],
+    meshPrimitiveNormals :: [V3 Float]
   } deriving (Eq, Show)
 
 data MeshPrimitiveMode
@@ -117,6 +119,16 @@ _meshPrimitiveIndices :: Lens' MeshPrimitive [Int]
 _meshPrimitiveIndices = lens
   meshPrimitiveIndices
   (\primitive' indices -> primitive' { meshPrimitiveIndices = indices })
+
+_meshPrimitivePositions :: Lens' MeshPrimitive [V3 Float]
+_meshPrimitivePositions = lens
+  meshPrimitivePositions
+  (\primitive' positions -> primitive' { meshPrimitivePositions = positions })
+
+_meshPrimitiveNormals :: Lens' MeshPrimitive [V3 Float]
+_meshPrimitiveNormals = lens
+  meshPrimitiveNormals
+  (\primitive' normals -> primitive' { meshPrimitiveNormals = normals })
   
 _meshWeights :: Lens' Mesh [Float]
 _meshWeights = lens meshWeights (\mesh weights -> mesh { meshWeights = weights })

@@ -1,6 +1,8 @@
 -- |Transform a `Codec.GlTF.GlTF` to `Text.GLTF.Loader.Gltf.Gltf`
 module Text.GLTF.Loader.Adapter
-  ( adaptGltf,
+  ( attributePosition,
+    attributeNormal,
+    adaptGltf,
     adaptAsset,
     adaptMeshes,
     adaptNodes,
@@ -21,6 +23,14 @@ import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as GlTF.Asset
 import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
+import qualified Data.HashMap.Strict as HashMap
+
+attributePosition :: Text
+attributePosition = "POSITION"
+
+attributeNormal :: Text
+attributeNormal = "NORMAL"
+
 
 adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Gltf
 adaptGltf gltf@GlTF.GlTF{..} buffers' = Gltf
@@ -83,9 +93,10 @@ adaptMeshPrimitive
 adaptMeshPrimitive gltf buffers' GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
     { meshPrimitiveMode = adaptMeshPrimitiveMode mode,
       meshPrimitiveIndices = maybe [] (vertexIndices gltf buffers') indices,
-      vertexPositions = [],
-      vertexNormals = []
+      meshPrimitivePositions = maybe [] (vertexPositions gltf buffers') positions,
+      meshPrimitiveNormals = []
     }
+    where positions = attributes HashMap.!? attributePosition
 
 adaptMeshPrimitiveMode :: GlTF.Mesh.MeshPrimitiveMode -> MeshPrimitiveMode
 adaptMeshPrimitiveMode = toEnum . GlTF.Mesh.unMeshPrimitiveMode

@@ -15,10 +15,11 @@ spec :: Spec
 spec = do
   let codecGltf = mkCodecGltf
       codecMeshPrimitive = mkCodecMeshPrimitive
-  
+
   describe "adaptGltf" $ do
-    it "Adapts a basic GlTF" $
-      adaptGltf codecGltf buffers `shouldBe` loaderGltf
+    it "Adapts a basic GlTF" $ do
+      buffers' <- buffers
+      adaptGltf codecGltf buffers' `shouldBe` loaderGltf
 
   describe "adaptAsset" $ do
     let codecAsset = mkCodecAsset
@@ -31,14 +32,18 @@ spec = do
         codecMesh' = mkCodecMesh { Mesh.weights = Just [3.1] }
     
     it "Adapts a list of nodes" $ do
+      buffers' <- buffers
+      
       let meshes = Just [codecMesh, codecMesh']
           adaptedMeshes = [loaderMesh, set _meshWeights [3.1] loaderMesh]
 
-      adaptMeshes codecGltf buffers meshes `shouldBe` adaptedMeshes
+      adaptMeshes codecGltf buffers' meshes `shouldBe` adaptedMeshes
 
     it "Adapts empty meshes" $ do
-      adaptMeshes codecGltf buffers (Just []) `shouldBe` []
-      adaptMeshes codecGltf buffers Nothing `shouldBe` []
+      buffers' <- buffers
+      
+      adaptMeshes codecGltf buffers' (Just []) `shouldBe` []
+      adaptMeshes codecGltf buffers' Nothing `shouldBe` []
 
   describe "adaptNodes" $ do
     let codecNode = mkCodecNode
@@ -57,13 +62,16 @@ spec = do
         codecMesh' = mkCodecMesh { Mesh.weights = Nothing }
         codecMesh'' = mkCodecMesh { Mesh.weights = Just [] }
     
-    it "Adapts a basic mesh" $
-      adaptMesh codecGltf buffers codecMesh `shouldBe` loaderMesh
+    it "Adapts a basic mesh" $ do
+      buffers' <- buffers
+      adaptMesh codecGltf buffers' codecMesh `shouldBe` loaderMesh
 
     it "Adapts empty weights" $ do
+      buffers' <- buffers
       let meshEmptyWeight = set _meshWeights [] loaderMesh
-      adaptMesh codecGltf buffers codecMesh' `shouldBe` meshEmptyWeight
-      adaptMesh codecGltf buffers codecMesh'' `shouldBe` meshEmptyWeight
+      
+      adaptMesh codecGltf buffers' codecMesh' `shouldBe` meshEmptyWeight
+      adaptMesh codecGltf buffers' codecMesh'' `shouldBe` meshEmptyWeight
   
   describe "adaptNode" $ do
     let codecNode = mkCodecNode
@@ -83,17 +91,25 @@ spec = do
           { Mesh.mode = Mesh.MeshPrimitiveMode 0 }
   
     it "adapts a list of primitives" $ do
+      buffers' <- buffers
       let primitives = [codecMeshPrimitive, codecMeshPrimitive']
           expectedResult
             = [ loaderMeshPrimitive,
                 set _meshPrimitiveMode Points loaderMeshPrimitive
               ]
       
-      adaptMeshPrimitives codecGltf buffers primitives `shouldBe` expectedResult
+      adaptMeshPrimitives codecGltf buffers' primitives `shouldBe` expectedResult
 
-  describe "adaptMeshPrimitive" $
+  describe "adaptMeshPrimitive" $ do
     it "adapts a basic primitive" $ do
-      adaptMeshPrimitive codecGltf buffers codecMeshPrimitive `shouldBe` loaderMeshPrimitive
+      buffers' <- buffers
+
+      let codecMeshPrimitive' = mkCodecMeshPrimitive
+            { Mesh.indices = Nothing }
+          loaderMeshPrimitive' = set _meshPrimitiveIndices [] loaderMeshPrimitive
+      
+      adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive `shouldBe` loaderMeshPrimitive
+      adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive' `shouldBe` loaderMeshPrimitive'
     
   describe "adaptMeshPrimitiveMode" $
     it "Adapts all expected modes" $ do
@@ -107,8 +123,8 @@ spec = do
       evaluate (adaptMeshPrimitiveMode $ Mesh.MeshPrimitiveMode 7)
         `shouldThrow` anyErrorCall
 
-buffers :: Vector GltfBuffer
-buffers = undefined
+buffers :: MonadUnliftIO io => io (Vector GltfBuffer)
+buffers = loadBuffers mkCodecGltf
 
 loaderGltf :: Gltf
 loaderGltf = Gltf
@@ -145,7 +161,7 @@ loaderNode = Node
 loaderMeshPrimitive :: MeshPrimitive
 loaderMeshPrimitive = MeshPrimitive
   { meshPrimitiveMode = Triangles,
-    meshPrimitiveIndices = [],
-    vertexPositions = [],
-    vertexNormals = []
+    meshPrimitiveIndices = [1..4],
+    meshPrimitivePositions = map (\x -> V3 x x x) [1..4],
+    meshPrimitiveNormals = []
   }
