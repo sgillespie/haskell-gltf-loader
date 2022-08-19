@@ -57,19 +57,19 @@ This includes a CLI utility to inspect GlTF files
 Currently, only retreiving indices are supported, but we hope to support the majority of GlTF
 features:
 
-[] Animitions
-[] Asset
-[] Cameras
-[] Images
-[] Materials
-[x] Meshes
-  [x] Positions
-  [x] Indices
-  [] Normals
-  [] Texture Coordinates
-[] Node
-[] Samplers
-[] Skins
+ - [ ] Animitions
+ - [ ] Asset
+ - [ ] Cameras
+ - [ ] Images
+ - [ ] Materials
+ - [x] Meshes
+    - [x] Positions
+    - [x] Indices
+    - [ ] Normals
+    - [ ] Texture Coordinates
+ - [ ] Node
+ - [ ] Samplers
+ - [ ] Skins
 
 ## Authors
 
