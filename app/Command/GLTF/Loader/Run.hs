@@ -11,15 +11,29 @@ import RIO.List (nub)
 run :: RIO App ()
 run = do
   file <- asks $ view (optionsL . _optionsFile)
+  summary <- asks $ view (optionsL . _optionsSummary)
   logInfo $ "File: " <> fromString file
 
   result <- liftIO $ fromFile file
-  either reportError reportGltf result
+
+  let reporter = if summary
+        then reportSummary
+        else reportGltf
+        
+  either reportError reporter result
 
 reportError :: HasLogFunc logger => Errors -> RIO logger ()
 reportError err
   = logError (display err)
   >> exitFailure
+
+reportSummary :: Gltf -> RIO App ()
+reportSummary gltf = do
+  reportAsset $ gltf ^. _asset
+  
+  logInfo "" -- Blank line
+
+  reportNodes gltf reportMeshSummary
 
 reportGltf :: Gltf -> RIO App ()
 reportGltf gltf = do
@@ -27,15 +41,15 @@ reportGltf gltf = do
   
   logInfo "" -- Blank line
 
-  reportNodes gltf
+  reportNodes gltf reportMesh
 
 reportAsset :: Asset -> RIO App ()
 reportAsset asset = do
   logInfo $ "Generator: " <> asset ^. _assetGenerator . to (fromMaybe "Unknown") . to display
   logInfo $ "Version: " <> asset ^. _assetVersion . to display
 
-reportNodes :: Gltf -> RIO App ()
-reportNodes gltf = do
+reportNodes :: Gltf -> (Mesh -> RIO App ()) -> RIO App ()
+reportNodes gltf meshReporter = do
   let nodes = gltf ^. _nodes
   logInfo $ "Nodes: " <> display (RIO.length nodes)
 
@@ -44,7 +58,7 @@ reportNodes gltf = do
 
     forM_ (node ^. _nodeMeshId) $ \meshId -> do
       logInfo "  Mesh: "
-      forM_ (gltf ^. _meshes  ^? ix meshId) reportMesh
+      forM_ (gltf ^. _meshes  ^? ix meshId) meshReporter
         
 
 reportMesh :: Mesh -> RIO App ()
@@ -57,6 +71,17 @@ reportMesh mesh = do
 
     forM_ (nub $ primitive' ^. _meshPrimitivePositions) $ \position -> do
       logInfo $ "        " <> displayV3 position
+
+reportMeshSummary :: Mesh -> RIO App ()
+reportMeshSummary mesh = do
+  logInfo $ "    Name: " <> mesh ^. _meshName . to (display . fromMaybe "Unknown")
+
+  let primitives' = mesh ^. _meshPrimitives
+      vertices = concatMap (^. _meshPrimitivePositions) primitives'
+      indices = concatMap (^. _meshPrimitiveIndices) primitives'
+
+  logInfo $ "    Unique Vertices: " <> display (length vertices)
+  logInfo $ "    Total Vertices: " <> display (length indices)
   
 displayV3 :: Display a => V3 a -> Utf8Builder
 displayV3 (V3 x y z)

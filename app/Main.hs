@@ -39,7 +39,16 @@ runApp processContext cliOptions logOptions appAction
           }
 
 options :: Parser Options
-options = Options <$> switch verboseOption <*> strArgument fileArg
+options = Options
+  <$> switch summaryOption
+  <*> switch verboseOption
+  <*> strArgument fileArg
+
+summaryOption :: Mod FlagFields Bool
+summaryOption
+  = long "summary"
+    <> short 's'
+    <> help "Compact output?"
 
 verboseOption :: Mod FlagFields Bool
 verboseOption
