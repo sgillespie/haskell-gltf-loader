@@ -12,7 +12,7 @@ import Options.Applicative.Simple
 main :: IO ()
 main = do
   (options', _) <- parseOptions
-  logOptions <- logOptionsHandle stderr (optionsVerbose options')
+  logOptions <- logOptionsHandle stderr False
   processContext <- mkDefaultProcessContext
 
   runApp processContext options' logOptions run

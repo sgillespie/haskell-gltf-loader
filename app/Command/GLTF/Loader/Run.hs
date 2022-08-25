@@ -7,25 +7,37 @@ import Lens.Micro
 import Linear (V3(..))
 import RIO
 import RIO.List (nub)
+import RIO.List.Partial ((!!))
 
 run :: RIO App ()
 run = do
-  file <- asks $ view (optionsL . _optionsFile)
-  summary <- asks $ view (optionsL . _optionsSummary)
-  logInfo $ "File: " <> fromString file
+  options <- asks (^. optionsL)
+  let file = options ^. _optionsFile
+      summary = options ^. _optionsSummary
+      verbose = options ^. _optionsVerbose
 
+  logInfo $ "File: " <> fromString file
   result <- liftIO $ fromFile file
 
-  let reporter = if summary
-        then reportSummary
-        else reportGltf
-        
-  either reportError reporter result
+  either reportError (reporter verbose summary) result
+
+reporter :: Bool -> Bool -> (Gltf -> RIO App ())
+reporter True _ = reportVerbose
+reporter _ True = reportSummary
+reporter _ _ = reportGltf
 
 reportError :: HasLogFunc logger => Errors -> RIO logger ()
 reportError err
   = logError (display err)
   >> exitFailure
+
+reportVerbose :: Gltf -> RIO App ()
+reportVerbose gltf = do
+  reportAsset $ gltf ^. _asset
+
+  logInfo "" -- Blank line
+
+  reportNodes gltf reportMeshVerbose
 
 reportSummary :: Gltf -> RIO App ()
 reportSummary gltf = do
@@ -59,7 +71,19 @@ reportNodes gltf meshReporter = do
     forM_ (node ^. _nodeMeshId) $ \meshId -> do
       logInfo "  Mesh: "
       forM_ (gltf ^. _meshes  ^? ix meshId) meshReporter
-        
+
+reportMeshVerbose :: Mesh -> RIO App ()
+reportMeshVerbose mesh = do
+  logInfo $ "    Name: " <> mesh ^. _meshName . to (display . fromMaybe "Unknown")
+  logInfo "    Mesh Primitives:"
+
+  forM_ (mesh ^. _meshPrimitives) $ \primitive' -> do
+    logInfo "      Vertices:"
+
+    let positions = primitive' ^. _meshPrimitivePositions
+    forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
+      let position = positions !! index
+      logInfo $ "        [" <> display index <> "]: " <> displayV3 position
 
 reportMesh :: Mesh -> RIO App ()
 reportMesh mesh = do
