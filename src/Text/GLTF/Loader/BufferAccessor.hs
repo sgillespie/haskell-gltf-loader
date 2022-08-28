@@ -6,6 +6,7 @@ module Text.GLTF.Loader.BufferAccessor
     vertexIndices,
     vertexPositions,
     vertexNormals,
+    vertexTexCoords,
     -- * Binary Get decoders
     -- ** Specific Type decoders
     getIndices,
@@ -73,7 +74,10 @@ vertexPositions :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 vertexPositions = readBufferWithGet getPositions
 
 vertexNormals :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
-vertexNormals = undefined
+vertexNormals = readBufferWithGet getNormals
+
+vertexTexCoords :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V2 Float)
+vertexTexCoords = readBufferWithGet getTexCoords
 
 readBufferWithGet
   :: Storable storable
@@ -138,6 +142,12 @@ getIndices = getScalar (fromIntegral <$> getUnsignedShort)
 
 getPositions :: Get (Vector (V3 Float))
 getPositions = getVec3 getFloat
+
+getNormals :: Get (Vector (V3 Float))
+getNormals = getVec3 getFloat
+
+getTexCoords :: Get (Vector (V2 Float))
+getTexCoords = getVec2 getFloat
 
 getScalar :: Get a -> Get (Vector a)
 getScalar = getVector

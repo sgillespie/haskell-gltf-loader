@@ -29,8 +29,7 @@ module Text.GLTF.Loader.Gltf
     _nodeWeights
   ) where
 
-import Linear.V3 (V3(..))
-import Linear.V4 (V4(..))
+import Linear
 import RIO
 
 data Gltf = Gltf
@@ -65,7 +64,8 @@ data MeshPrimitive = MeshPrimitive
   { meshPrimitiveMode :: MeshPrimitiveMode,
     meshPrimitiveIndices :: Vector Int,
     meshPrimitivePositions :: Vector (V3 Float),
-    meshPrimitiveNormals :: Vector (V3 Float)
+    meshPrimitiveNormals :: Vector (V3 Float),
+    meshPrimitiveTexCoords :: Vector (V2 Float)
   } deriving (Eq, Show)
 
 data MeshPrimitiveMode

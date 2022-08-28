@@ -5,7 +5,7 @@ import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
 import Text.GLTF.Loader.Test.MkGltf
 
-import Linear (V3(..), V4(..))
+import Linear
 import RIO
 import Test.Hspec
 import qualified Codec.GlTF.Mesh as Mesh
@@ -163,5 +163,6 @@ loaderMeshPrimitive = MeshPrimitive
   { meshPrimitiveMode = Triangles,
     meshPrimitiveIndices = [1..4],
     meshPrimitivePositions = fmap (\x -> V3 x x x) [1..4],
-    meshPrimitiveNormals = []
+    meshPrimitiveNormals = fmap (\x -> V3 x x x) [5..8],
+    meshPrimitiveTexCoords = fmap (\x -> V2 x x) [9..12]
   }
