@@ -28,7 +28,7 @@ spec = do
       let (GltfBuffer buffer') = buffers ! 0
           values = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict $ buffer'
       
-      values `shouldBe` ([1..4] :: [Integer])
+      values `shouldBe` ([1..4] :: Vector Integer)
 
     it "Handles malformed URI" $ do
       let gltf' = gltf

@@ -35,9 +35,9 @@ import RIO
 
 data Gltf = Gltf
   { gltfAsset :: Asset,
-    gltfMeshes :: [Mesh],
-    gltfNodes :: [Node] }
-  deriving (Eq, Show)
+    gltfMeshes :: Vector Mesh,
+    gltfNodes :: Vector Node
+  } deriving (Eq, Show)
 
 data Asset = Asset
   { assetVersion :: Text,
@@ -47,8 +47,8 @@ data Asset = Asset
   } deriving (Eq, Show)
 
 data Mesh = Mesh
-  { meshPrimitives :: [MeshPrimitive],
-    meshWeights :: [Float],
+  { meshPrimitives :: Vector MeshPrimitive,
+    meshWeights :: Vector Float,
     meshName :: Maybe Text
   } deriving (Eq, Show)
 
@@ -63,9 +63,9 @@ data Node = Node
 
 data MeshPrimitive = MeshPrimitive
   { meshPrimitiveMode :: MeshPrimitiveMode,
-    meshPrimitiveIndices :: [Int],
-    meshPrimitivePositions :: [V3 Float],
-    meshPrimitiveNormals :: [V3 Float]
+    meshPrimitiveIndices :: Vector Int,
+    meshPrimitivePositions :: Vector (V3 Float),
+    meshPrimitiveNormals :: Vector (V3 Float)
   } deriving (Eq, Show)
 
 data MeshPrimitiveMode
@@ -81,10 +81,10 @@ data MeshPrimitiveMode
 _asset :: Lens' Gltf Asset
 _asset = lens gltfAsset (\gltf asset -> gltf { gltfAsset = asset })
 
-_meshes :: Lens' Gltf [Mesh]
+_meshes :: Lens' Gltf (Vector Mesh)
 _meshes = lens gltfMeshes (\gltf meshes -> gltf { gltfMeshes = meshes })
 
-_nodes :: Lens' Gltf [Node]
+_nodes :: Lens' Gltf (Vector Node)
 _nodes = lens gltfNodes (\gltf nodes -> gltf { gltfNodes = nodes })
 
 _assetVersion :: Lens' Asset Text
@@ -105,7 +105,7 @@ _assetMinVersion = lens
   assetMinVersion
   (\asset minVersion' -> asset { assetMinVersion = minVersion' })
 
-_meshPrimitives :: Lens' Mesh [MeshPrimitive]
+_meshPrimitives :: Lens' Mesh (Vector MeshPrimitive)
 _meshPrimitives = lens
   meshPrimitives
   (\mesh primitives -> mesh { meshPrimitives = primitives })
@@ -115,22 +115,22 @@ _meshPrimitiveMode = lens
   meshPrimitiveMode
   (\primitive' mode -> primitive' { meshPrimitiveMode = mode })
 
-_meshPrimitiveIndices :: Lens' MeshPrimitive [Int]
+_meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Int)
 _meshPrimitiveIndices = lens
   meshPrimitiveIndices
   (\primitive' indices -> primitive' { meshPrimitiveIndices = indices })
 
-_meshPrimitivePositions :: Lens' MeshPrimitive [V3 Float]
+_meshPrimitivePositions :: Lens' MeshPrimitive (Vector (V3 Float))
 _meshPrimitivePositions = lens
   meshPrimitivePositions
   (\primitive' positions -> primitive' { meshPrimitivePositions = positions })
 
-_meshPrimitiveNormals :: Lens' MeshPrimitive [V3 Float]
+_meshPrimitiveNormals :: Lens' MeshPrimitive (Vector (V3 Float))
 _meshPrimitiveNormals = lens
   meshPrimitiveNormals
   (\primitive' normals -> primitive' { meshPrimitiveNormals = normals })
   
-_meshWeights :: Lens' Mesh [Float]
+_meshWeights :: Lens' Mesh (Vector Float)
 _meshWeights = lens meshWeights (\mesh weights -> mesh { meshWeights = weights })
 
 _meshName :: Lens' Mesh (Maybe Text)

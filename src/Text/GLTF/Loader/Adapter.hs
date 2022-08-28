@@ -51,11 +51,11 @@ adaptMeshes
   :: GlTF.GlTF
   -> Vector GltfBuffer
   -> Maybe (Vector GlTF.Mesh.Mesh)
-  -> [Mesh]
-adaptMeshes gltf buffers' = maybe [] (map (adaptMesh gltf buffers') . toList)
+  -> Vector Mesh
+adaptMeshes gltf buffers' = maybe mempty (fmap $ adaptMesh gltf buffers')
 
-adaptNodes :: Maybe (Vector GlTF.Node.Node) -> [Node]
-adaptNodes = maybe [] (map adaptNode . toList)
+adaptNodes :: Maybe (Vector GlTF.Node.Node) -> Vector Node
+adaptNodes = maybe mempty (fmap adaptNode)
 
 adaptMesh
   :: GlTF.GlTF
@@ -64,7 +64,7 @@ adaptMesh
   -> Mesh
 adaptMesh gltf buffers' GlTF.Mesh.Mesh{..} = Mesh
     { meshPrimitives = adaptMeshPrimitives gltf buffers' primitives,
-      meshWeights = maybe [] toList weights,
+      meshWeights = fromMaybe mempty weights,
       meshName = name
     }
 
@@ -82,8 +82,8 @@ adaptMeshPrimitives
   :: GlTF.GlTF
   -> Vector GltfBuffer
   -> Vector GlTF.Mesh.MeshPrimitive
-  -> [MeshPrimitive]
-adaptMeshPrimitives gltf buffers' = map (adaptMeshPrimitive gltf buffers') . toList
+  -> Vector MeshPrimitive
+adaptMeshPrimitives gltf = fmap . adaptMeshPrimitive gltf
 
 adaptMeshPrimitive
   :: GlTF.GlTF
@@ -92,8 +92,8 @@ adaptMeshPrimitive
   -> MeshPrimitive
 adaptMeshPrimitive gltf buffers' GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
     { meshPrimitiveMode = adaptMeshPrimitiveMode mode,
-      meshPrimitiveIndices = maybe [] (vertexIndices gltf buffers') indices,
-      meshPrimitivePositions = maybe [] (vertexPositions gltf buffers') positions,
+      meshPrimitiveIndices = maybe mempty (vertexIndices gltf buffers') indices,
+      meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
       meshPrimitiveNormals = []
     }
     where positions = attributes HashMap.!? attributePosition

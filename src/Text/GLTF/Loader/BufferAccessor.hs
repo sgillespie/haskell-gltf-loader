@@ -66,24 +66,24 @@ loadBuffers GlTF{buffers=buffers} = do
     
     return $ GltfBuffer payload
 
-vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> [Int]
+vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Int
 vertexIndices = readBufferWithGet getIndices
 
-vertexPositions :: GlTF -> Vector GltfBuffer -> AccessorIx -> [V3 Float]
+vertexPositions :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 vertexPositions = readBufferWithGet getPositions
 
-vertexNormals :: GlTF -> Vector GltfBuffer -> AccessorIx -> [V3 Float]
+vertexNormals :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 vertexNormals = undefined
 
 readBufferWithGet
   :: Storable storable
-  => Get [storable]
+  => Get (Vector storable)
   -> GlTF
   -> Vector GltfBuffer
   -> AccessorIx
-  -> [storable]
+  -> Vector storable
 readBufferWithGet getter gltf buffers' accessorId
-  = maybe []
+  = maybe mempty
       (readFromBuffer undefined getter)
       (bufferAccessor gltf buffers' accessorId)
 
@@ -125,34 +125,34 @@ lookupBuffer (BufferIx bufferId) = (Vector.!? bufferId)
 readFromBuffer
   :: Storable storable
   => storable
-  -> Get [storable]
+  -> Get (Vector storable)
   -> BufferAccessor
-  -> [storable]
+  -> Vector storable
 readFromBuffer storable getter BufferAccessor{..}
   = runGet getter (fromStrict payload')
   where payload' = ByteString.take len' . ByteString.drop offset . unBuffer $ buffer
         len' = count * sizeOf storable
 
-getIndices :: Get [Int]
+getIndices :: Get (Vector Int)
 getIndices = getScalar (fromIntegral <$> getUnsignedShort)
 
-getPositions :: Get [V3 Float]
+getPositions :: Get (Vector (V3 Float))
 getPositions = getVec3 getFloat
 
-getScalar :: Get a -> Get [a]
-getScalar = getList
+getScalar :: Get a -> Get (Vector a)
+getScalar = getVector
 
-getVec2 :: Get a -> Get [V2 a]
-getVec2 getter = getList $ V2 <$> getter <*> getter
+getVec2 :: Get a -> Get (Vector (V2 a))
+getVec2 getter = getVector $ V2 <$> getter <*> getter
 
-getVec3 :: Get a -> Get [V3 a]
-getVec3 getter = getList $ V3 <$> getter <*> getter <*> getter
+getVec3 :: Get a -> Get (Vector (V3 a))
+getVec3 getter = getVector $ V3 <$> getter <*> getter <*> getter
 
-getVec4 :: Get a -> Get [V4 a]
-getVec4 getter = getList $ V4 <$> getter <*> getter <*> getter <*> getter
+getVec4 :: Get a -> Get (Vector (V4 a))
+getVec4 getter = getVector $ V4 <$> getter <*> getter <*> getter <*> getter
 
-getMat2 :: Get a -> Get [M22 a]
-getMat2 getter = getList $ do
+getMat2 :: Get a -> Get (Vector (M22 a))
+getMat2 getter = getVector $ do
   m1_1 <- getter
   m1_2 <- getter
 
@@ -163,8 +163,8 @@ getMat2 getter = getList $ do
     (V2 m1_1 m2_1)
     (V2 m1_2 m2_2)
 
-getMat3 :: Get a -> Get [M33 a]
-getMat3 getter = getList $ do
+getMat3 :: Get a -> Get (Vector (M33 a))
+getMat3 getter = getVector $ do
   m1_1 <- getter
   m1_2 <- getter
   m1_3 <- getter
@@ -182,8 +182,8 @@ getMat3 getter = getList $ do
     (V3 m1_2 m2_2 m3_2)
     (V3 m1_3 m2_3 m3_3)
 
-getMat4 :: Get a -> Get [M44 a]
-getMat4 getter = getList $ do
+getMat4 :: Get a -> Get (Vector (M44 a))
+getMat4 getter = getVector $ do
   m1_1 <- getter
   m1_2 <- getter
   m1_3 <- getter
@@ -227,6 +227,9 @@ getUnsignedInt = getWord32le
 
 getFloat :: Get Float
 getFloat = getFloatle
+
+getVector :: Get a -> Get (Vector a)
+getVector = fmap Vector.fromList . getList
 
 getList :: Get a -> Get [a]
 getList getter = do

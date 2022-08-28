@@ -4,10 +4,10 @@ import Command.GLTF.Loader.App
 import Text.GLTF.Loader
 
 import Lens.Micro
+import Lens.Micro.Platform ()
 import Linear (V3(..))
 import RIO
-import RIO.List (nub)
-import RIO.List.Partial ((!!))
+import qualified RIO.Vector.Boxed as Vector
 
 run :: RIO App ()
 run = do
@@ -70,7 +70,7 @@ reportNodes gltf meshReporter = do
 
     forM_ (node ^. _nodeMeshId) $ \meshId -> do
       logInfo "  Mesh: "
-      forM_ (gltf ^. _meshes  ^? ix meshId) meshReporter
+      forM_ (gltf ^. _meshes ^? ix meshId) meshReporter
 
 reportMeshVerbose :: Mesh -> RIO App ()
 reportMeshVerbose mesh = do
@@ -82,8 +82,8 @@ reportMeshVerbose mesh = do
 
     let positions = primitive' ^. _meshPrimitivePositions
     forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
-      let position = positions !! index
-      logInfo $ "        [" <> display index <> "]: " <> displayV3 position
+      forM_ (positions Vector.!? index) $ \position -> do
+        logInfo $ "        [" <> display index <> "]: " <> displayV3 position
 
 reportMesh :: Mesh -> RIO App ()
 reportMesh mesh = do
@@ -93,7 +93,7 @@ reportMesh mesh = do
   forM_ (mesh ^. _meshPrimitives) $ \primitive' -> do
     logInfo "      Vertex Positions:"
 
-    forM_ (nub $ primitive' ^. _meshPrimitivePositions) $ \position -> do
+    forM_ (Vector.uniq $ primitive' ^. _meshPrimitivePositions) $ \position -> do
       logInfo $ "        " <> displayV3 position
 
 reportMeshSummary :: Mesh -> RIO App ()
@@ -101,8 +101,8 @@ reportMeshSummary mesh = do
   logInfo $ "    Name: " <> mesh ^. _meshName . to (display . fromMaybe "Unknown")
 
   let primitives' = mesh ^. _meshPrimitives
-      vertices = concatMap (^. _meshPrimitivePositions) primitives'
-      indices = concatMap (^. _meshPrimitiveIndices) primitives'
+      vertices = Vector.concatMap (^. _meshPrimitivePositions) primitives'
+      indices = Vector.concatMap (^. _meshPrimitiveIndices) primitives'
 
   logInfo $ "    Unique Vertices: " <> display (length vertices)
   logInfo $ "    Total Vertices: " <> display (length indices)

@@ -162,6 +162,6 @@ loaderMeshPrimitive :: MeshPrimitive
 loaderMeshPrimitive = MeshPrimitive
   { meshPrimitiveMode = Triangles,
     meshPrimitiveIndices = [1..4],
-    meshPrimitivePositions = map (\x -> V3 x x x) [1..4],
+    meshPrimitivePositions = fmap (\x -> V3 x x x) [1..4],
     meshPrimitiveNormals = []
   }

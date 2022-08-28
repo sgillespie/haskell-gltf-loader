@@ -85,6 +85,7 @@ executables:
     source-dirs: app
     dependencies:
       - gltf-loader
+      - microlens-platform
       - optparse-simple
 
     ghc-options:
