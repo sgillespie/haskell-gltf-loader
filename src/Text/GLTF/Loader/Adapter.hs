@@ -5,10 +5,14 @@ module Text.GLTF.Loader.Adapter
     attributeTexCoord,
     adaptGltf,
     adaptAsset,
+    adaptMaterials,
     adaptMeshes,
     adaptNodes,
+    adaptMaterial,
     adaptMesh,
     adaptNode,
+    adaptAlphaMode,
+    adaptPbrMetallicRoughness,
     adaptMeshPrimitives,
     adaptMeshPrimitive,
     adaptMeshPrimitiveMode
@@ -22,6 +26,8 @@ import RIO
 import RIO.Partial (toEnum)
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as GlTF.Asset
+import qualified Codec.GlTF.Material as GlTF.Material
+import qualified Codec.GlTF.PbrMetallicRoughness as GlTF.PbrMetallicRoughness
 import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
 import qualified Data.HashMap.Strict as HashMap
@@ -38,6 +44,7 @@ attributeTexCoord = "TEXCOORD_0"
 adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Gltf
 adaptGltf gltf@GlTF.GlTF{..} buffers' = Gltf
     { gltfAsset = adaptAsset asset,
+      gltfMaterials = adaptMaterials materials,
       gltfMeshes = adaptMeshes gltf buffers' meshes,
       gltfNodes = adaptNodes nodes
     }
@@ -50,6 +57,9 @@ adaptAsset GlTF.Asset.Asset{..} = Asset
     assetMinVersion = minVersion
   }
 
+adaptMaterials :: Maybe (Vector GlTF.Material.Material) -> Vector Material
+adaptMaterials = maybe mempty (fmap adaptMaterial)
+
 adaptMeshes
   :: GlTF.GlTF
   -> Vector GltfBuffer
@@ -59,6 +69,16 @@ adaptMeshes gltf buffers' = maybe mempty (fmap $ adaptMesh gltf buffers')
 
 adaptNodes :: Maybe (Vector GlTF.Node.Node) -> Vector Node
 adaptNodes = maybe mempty (fmap adaptNode)
+
+adaptMaterial :: GlTF.Material.Material -> Material
+adaptMaterial GlTF.Material.Material{..} = Material
+  { materialAlphaCutoff = alphaCutoff,
+    materialAlphaMode = adaptAlphaMode alphaMode,
+    materialDoubleSided = doubleSided,
+    materialEmissiveFactor = toV3 emissiveFactor,
+    materialName = name,
+    materialPbrMetallicRoughness = adaptPbrMetallicRoughness <$> pbrMetallicRoughness
+  }
 
 adaptMesh
   :: GlTF.GlTF
@@ -80,6 +100,23 @@ adaptNode GlTF.Node.Node{..} = Node
     nodeTranslation = toV3 <$> translation,
     nodeWeights = maybe [] toList weights
   }
+
+adaptAlphaMode :: GlTF.Material.MaterialAlphaMode -> MaterialAlphaMode
+adaptAlphaMode GlTF.Material.BLEND = Blend
+adaptAlphaMode GlTF.Material.MASK = Mask
+adaptAlphaMode GlTF.Material.OPAQUE = Opaque
+adaptAlphaMode (GlTF.Material.MaterialAlphaMode alphaMode)
+  = error $ "Invalid MaterialAlphaMode: " <> show alphaMode
+
+adaptPbrMetallicRoughness
+  :: GlTF.PbrMetallicRoughness.PbrMetallicRoughness
+  -> PbrMetallicRoughness
+adaptPbrMetallicRoughness GlTF.PbrMetallicRoughness.PbrMetallicRoughness{..}
+  = PbrMetallicRoughness
+    { pbrBaseColorFactor = toV4 baseColorFactor,
+      pbrMetallicFactor = metallicFactor,
+      pbrRoughnessFactor = roughnessFactor
+    }
 
 adaptMeshPrimitives
   :: GlTF.GlTF

@@ -15,7 +15,9 @@ import qualified Codec.GlTF.Accessor as Accessor
 import qualified Codec.GlTF.Asset as Asset
 import qualified Codec.GlTF.Buffer as Buffer
 import qualified Codec.GlTF.BufferView as BufferView
+import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
+import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.URI as URI
 import qualified Data.HashMap.Strict as HashMap
@@ -46,7 +48,7 @@ mkCodecGltf = GlTF.GlTF
       ],
     cameras = Nothing,
     images = Nothing,
-    materials = Nothing,
+    materials = Just [mkCodecMaterial],
     meshes = Just [mkCodecMesh],
     nodes = Just [mkCodecNode],
     samplers = Nothing,
@@ -219,11 +221,37 @@ mkCodecBufferTexCoords = Buffer.Buffer
     name = Just "Buffer Positions"
   }
 
+mkCodecMaterial :: Material.Material
+mkCodecMaterial = Material.Material
+  { alphaCutoff = 1.0,
+    emissiveFactor = (1.0, 2.0, 3.0),
+    alphaMode = Material.OPAQUE,
+    doubleSided = True,
+    pbrMetallicRoughness = Just mkCodecPbrMetallicRoughness,
+    normalTexture = Nothing,
+    occlusionTexture = Nothing,
+    emissiveTexture = Nothing,
+    name = Just "Material",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
 mkCodecMesh :: Mesh.Mesh
 mkCodecMesh = Mesh.Mesh
   { primitives = [mkCodecMeshPrimitive],
     weights = Just [1.2],
     name = Just "mesh",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+mkCodecPbrMetallicRoughness :: PbrMetallicRoughness.PbrMetallicRoughness
+mkCodecPbrMetallicRoughness = PbrMetallicRoughness.PbrMetallicRoughness
+  { baseColorFactor = (1.0, 2.0, 3.0, 4.0),
+    metallicFactor = 1.0,
+    roughnessFactor = 2.0,
+    metallicRoughnessTexture = Nothing,
+    baseColorTexture = Nothing,
     extensions = Nothing,
     extras = Nothing
   }

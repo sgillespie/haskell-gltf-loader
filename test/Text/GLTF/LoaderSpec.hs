@@ -3,7 +3,7 @@ module Text.GLTF.LoaderSpec (spec) where
 import Text.GLTF.Loader
 
 import Lens.Micro
-import Linear (V2(..), V3(..))
+import Linear (V2(..), V3(..), V4(..))
 import RIO
 import Test.Hspec
 
@@ -34,6 +34,21 @@ spec = do
                   assetMinVersion = Nothing
                 },
 
+              gltfMaterials
+                = [ Material
+                      { materialAlphaCutoff = 0.5,
+                        materialAlphaMode = Opaque,
+                        materialDoubleSided = True,
+                        materialEmissiveFactor = V3 0.0 0.0 0.0,
+                        materialName = Just "Material",
+                        materialPbrMetallicRoughness = Just $ PbrMetallicRoughness
+                          { pbrBaseColorFactor = V4 0.8 0.8 0.8 1.0,
+                            pbrMetallicFactor = 0.0,
+                            pbrRoughnessFactor = 0.4
+                          }
+                      }
+                  ],
+              
               gltfMeshes
                 = [ Mesh
                      { meshPrimitives

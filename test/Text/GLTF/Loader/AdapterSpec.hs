@@ -8,6 +8,7 @@ import Text.GLTF.Loader.Test.MkGltf
 import Linear
 import RIO
 import Test.Hspec
+import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
 
@@ -44,6 +45,20 @@ spec = do
       
       adaptMeshes codecGltf buffers' (Just []) `shouldBe` []
       adaptMeshes codecGltf buffers' Nothing `shouldBe` []
+
+  describe "adaptMaterials" $ do
+    let materials = Just [mkCodecMaterial]
+
+    it "Adapts a list of materials" $ do
+      adaptMaterials Nothing `shouldBe` []
+      adaptMaterials materials `shouldBe` [loaderMaterial]
+
+    it "Ignores PBR metallic roughness when not specified" $ do
+      let materials' = Just
+            [mkCodecMaterial { Material.pbrMetallicRoughness = Nothing }]
+          adaptedMaterial = set _materialPbrMetallicRoughness Nothing loaderMaterial
+
+      adaptMaterials materials' `shouldBe` [adaptedMaterial]
 
   describe "adaptNodes" $ do
     let codecNode = mkCodecNode
@@ -85,6 +100,14 @@ spec = do
       let nodeEmptyWeight = set _nodeWeights [] loaderNode
       adaptNode codecNode' `shouldBe` nodeEmptyWeight
       adaptNode codecNode'' `shouldBe` nodeEmptyWeight
+
+  describe "adaptAlphaMode" $ do
+    it "Adapts all expected modes" $ do
+      adaptAlphaMode Material.BLEND `shouldBe` Blend
+      adaptAlphaMode Material.MASK `shouldBe` Mask
+      adaptAlphaMode Material.OPAQUE `shouldBe` Opaque
+      evaluate (adaptAlphaMode $ Material.MaterialAlphaMode "???")
+        `shouldThrow` anyErrorCall
 
   describe "adaptMeshPrimitives" $ do
     let codecMeshPrimitive' = mkCodecMeshPrimitive
@@ -129,6 +152,7 @@ buffers = loadBuffers mkCodecGltf
 loaderGltf :: Gltf
 loaderGltf = Gltf
   { gltfAsset = loaderAsset,
+    gltfMaterials = [loaderMaterial],
     gltfMeshes = [loaderMesh],
     gltfNodes = [loaderNode]
   }
@@ -139,6 +163,16 @@ loaderAsset = Asset
     assetCopyright = Just "copyright",
     assetGenerator = Just "generator",
     assetMinVersion = Just "minVersion"
+  }
+
+loaderMaterial :: Material
+loaderMaterial = Material
+  { materialAlphaCutoff = 1.0,
+    materialAlphaMode = Opaque,
+    materialDoubleSided = True,
+    materialEmissiveFactor = V3 1.0 2.0 3.0,
+    materialName = Just "Material",
+    materialPbrMetallicRoughness = Just loaderPbrMetallicRoughness
   }
 
 loaderMesh :: Mesh
@@ -156,6 +190,13 @@ loaderNode = Node
     nodeScale = Just $ V3 5 6 7,
     nodeTranslation = Just $ V3 8 9 10,
     nodeWeights = [11, 12, 13]
+  }
+
+loaderPbrMetallicRoughness :: PbrMetallicRoughness
+loaderPbrMetallicRoughness = PbrMetallicRoughness
+  { pbrBaseColorFactor = V4 1.0 2.0 3.0 4.0,
+    pbrMetallicFactor = 1.0,
+    pbrRoughnessFactor = 2.0
   }
 
 loaderMeshPrimitive :: MeshPrimitive
