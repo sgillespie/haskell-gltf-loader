@@ -5,7 +5,7 @@ import Text.GLTF.Loader
 
 import Lens.Micro
 import Lens.Micro.Platform ()
-import Linear (V3(..))
+import Linear (V3(..), V4(..))
 import RIO
 import qualified RIO.Vector.Boxed as Vector
 
@@ -37,7 +37,7 @@ reportVerbose gltf = do
 
   logInfo "" -- Blank line
 
-  reportNodes gltf reportMeshVerbose
+  reportNodes gltf $ reportMeshVerbose gltf
 
 reportSummary :: Gltf -> RIO App ()
 reportSummary gltf = do
@@ -53,7 +53,7 @@ reportGltf gltf = do
   
   logInfo "" -- Blank line
 
-  reportNodes gltf reportMesh
+  reportNodes gltf $ reportMesh gltf
 
 reportAsset :: Asset -> RIO App ()
 reportAsset asset = do
@@ -72,12 +72,13 @@ reportNodes gltf meshReporter = do
       logInfo "  Mesh: "
       forM_ (gltf ^. _meshes ^? ix meshId) meshReporter
 
-reportMeshVerbose :: Mesh -> RIO App ()
-reportMeshVerbose mesh = do
+reportMeshVerbose :: Gltf -> Mesh -> RIO App ()
+reportMeshVerbose gltf mesh = do
   logInfo $ "    Name: " <> mesh ^. _meshName . to (display . fromMaybe "Unknown")
   logInfo "    Mesh Primitives:"
 
   forM_ (mesh ^. _meshPrimitives) $ \primitive' -> do
+    -- Report Vertices
     logInfo "      Vertices:"
 
     let positions = primitive' ^. _meshPrimitivePositions
@@ -85,8 +86,12 @@ reportMeshVerbose mesh = do
       forM_ (positions Vector.!? index) $ \position -> do
         logInfo $ "        [" <> display index <> "]: " <> displayV3 position
 
-reportMesh :: Mesh -> RIO App ()
-reportMesh mesh = do
+    -- Report material
+    forM_ (primitive' ^. _meshPrimitiveMaterial) $ \materialId -> do
+      forM_ (gltf ^. _materials . to (Vector.!? materialId)) reportMaterial
+    
+reportMesh :: Gltf -> Mesh -> RIO App ()
+reportMesh gltf mesh = do
   logInfo $ "    Name: " <> mesh ^. _meshName . to (display . fromMaybe "Unknown")
   logInfo "    Mesh Primitives:"
 
@@ -95,6 +100,10 @@ reportMesh mesh = do
 
     forM_ (Vector.uniq $ primitive' ^. _meshPrimitivePositions) $ \position -> do
       logInfo $ "        " <> displayV3 position
+
+    -- Report material
+    forM_ (primitive' ^. _meshPrimitiveMaterial) $ \materialId -> do
+      forM_ (gltf ^. _materials . to (Vector.!? materialId)) reportMaterial
 
 reportMeshSummary :: Mesh -> RIO App ()
 reportMeshSummary mesh = do
@@ -106,6 +115,17 @@ reportMeshSummary mesh = do
 
   logInfo $ "    Unique Vertices: " <> display (length vertices)
   logInfo $ "    Total Vertices: " <> display (length indices)
+
+reportMaterial :: Material -> RIO App ()
+reportMaterial material = do
+  logInfo $ "      Material:"
+  logInfo $ "        Name: " <>
+    material ^. _materialName . to (display . fromMaybe "Unknown")
+  
+  forM_ (material ^. _materialPbrMetallicRoughness) $ \pbr -> do
+    logInfo $ "        Base Color Factor: " <> pbr ^. _pbrBaseColorFactor . to displayV4
+    logInfo $ "        Metallic Factor: " <> pbr ^. _pbrMetallicFactor . to display
+    logInfo $ "        Roughness Factor: " <> pbr ^. _pbrRoughnessFactor . to display
   
 displayV3 :: Display a => V3 a -> Utf8Builder
 displayV3 (V3 x y z)
@@ -114,3 +134,13 @@ displayV3 (V3 x y z)
   <> display y <> ", "
   <> display z <>
   ")"
+
+displayV4 :: Display a => V4 a -> Utf8Builder
+displayV4 (V4 w x y z)
+  = "("
+  <> display w <> ", "
+  <> display x <> ", "
+  <> display y <> ", "
+  <> display z <>
+  ")"
+
