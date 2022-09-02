@@ -1,9 +1,14 @@
+
 module Text.GLTF.Loader
-  ( fromByteString,
+  ( -- * Scene loading functions
     fromFile,
-    
-    module Text.GLTF.Loader.Errors,
-    module Text.GLTF.Loader.Gltf
+    fromByteString,
+
+    -- * GLTF Types
+    module Text.GLTF.Loader.Gltf,
+
+    -- * Loading Errors
+    module Text.GLTF.Loader.Errors
   ) where
 
 import Text.GLTF.Loader.Adapter
@@ -16,9 +21,11 @@ import Lens.Micro
 import RIO
 import qualified Codec.GlTF as GlTF
 
+-- | Load a glTF scene from a ByteString
 fromByteString :: MonadUnliftIO io => ByteString -> io (Either Errors Gltf)
 fromByteString =  toGltfResult . GlTF.fromByteString
 
+-- | Load a glTF scene from a file
 fromFile :: MonadUnliftIO io => FilePath -> io (Either Errors Gltf)
 fromFile path = liftIO (GlTF.fromFile path) >>= toGltfResult
   

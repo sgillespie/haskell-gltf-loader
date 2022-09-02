@@ -52,6 +52,7 @@ module Text.GLTF.Loader.Gltf
 import Linear
 import RIO
 
+-- | The root data type for a glTF asset
 data Gltf = Gltf
   { gltfAsset :: Asset,
     gltfMaterials :: Vector Material,
@@ -59,6 +60,7 @@ data Gltf = Gltf
     gltfNodes :: Vector Node
   } deriving (Eq, Show)
 
+-- | Metadata about the glTF asset
 data Asset = Asset
   { assetVersion :: Text,
     assetCopyright :: Maybe Text,
@@ -66,6 +68,7 @@ data Asset = Asset
     assetMinVersion :: Maybe Text
   } deriving (Eq, Show)
 
+-- | The material appearance of a primitive
 data Material = Material
   { materialAlphaCutoff :: Float,
     materialAlphaMode :: MaterialAlphaMode,
@@ -75,12 +78,14 @@ data Material = Material
     materialPbrMetallicRoughness :: Maybe PbrMetallicRoughness
   } deriving (Eq, Show)
 
+-- | A set of primitives to be rendered
 data Mesh = Mesh
   { meshPrimitives :: Vector MeshPrimitive,
     meshWeights :: Vector Float,
     meshName :: Maybe Text
   } deriving (Eq, Show)
 
+-- | A node in the node hierarchy
 data Node = Node
   { nodeMeshId :: Maybe Int,
     nodeName :: Maybe Text,
@@ -90,9 +95,9 @@ data Node = Node
     nodeWeights :: [Float]
   } deriving (Eq, Show)
 
+-- | Geometry to be rendered with the given material
 data MeshPrimitive = MeshPrimitive
-  {
-    meshPrimitiveIndices :: Vector Int,
+  { meshPrimitiveIndices :: Vector Int,
     meshPrimitiveMaterial :: Maybe Int,
     meshPrimitiveMode :: MeshPrimitiveMode,
     meshPrimitiveNormals :: Vector (V3 Float),
@@ -100,18 +105,22 @@ data MeshPrimitive = MeshPrimitive
     meshPrimitiveTexCoords :: Vector (V2 Float)
   } deriving (Eq, Show)
 
+-- | Alpha rendering mode of a material
 data MaterialAlphaMode
   = Blend
   | Mask
   | Opaque
   deriving (Eq, Enum, Show)
 
+-- | A set of parameter values that are used to define the metallic-roughness material
+-- model from Physically-Based Rendering (PBR) methodology.
 data PbrMetallicRoughness = PbrMetallicRoughness
   { pbrBaseColorFactor :: V4 Float,
     pbrMetallicFactor :: Float,
     pbrRoughnessFactor :: Float
   } deriving (Eq, Show)
 
+-- | The topology type of primitives to render.
 data MeshPrimitiveMode
   = Points
   | Lines

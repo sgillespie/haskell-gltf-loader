@@ -11,6 +11,8 @@ module Text.GLTF.Loader.BufferAccessor
     -- ** Specific Type decoders
     getIndices,
     getPositions,
+    getNormals,
+    getTexCoords,
     -- ** GLTF Accessor Type decoders
     getScalar,
     getVec2,
@@ -41,15 +43,18 @@ import RIO hiding (min, max)
 import qualified RIO.Vector as Vector
 import qualified RIO.ByteString as ByteString
 
+-- | Holds the entire payload of a glTF buffer
 newtype GltfBuffer = GltfBuffer { unBuffer :: ByteString }
   deriving (Eq, Show)
 
+-- | A buffer and some metadata
 data BufferAccessor = BufferAccessor
   { offset :: Int,
     count :: Int,
     buffer :: GltfBuffer
   }
 
+-- | Read all the buffers into memory
 loadBuffers :: MonadUnliftIO io => GlTF -> io (Vector GltfBuffer)
 loadBuffers GlTF{buffers=buffers} = do
   let buffers' = fromMaybe [] buffers
@@ -67,18 +72,23 @@ loadBuffers GlTF{buffers=buffers} = do
     
     return $ GltfBuffer payload
 
+-- | Decode vertex indices
 vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Int
 vertexIndices = readBufferWithGet getIndices
 
+-- | Decode vertex positions
 vertexPositions :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 vertexPositions = readBufferWithGet getPositions
 
+-- | Decode vertex normals
 vertexNormals :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 vertexNormals = readBufferWithGet getNormals
 
+-- | Decode texture coordinates. Note that we only use the first one.
 vertexTexCoords :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V2 Float)
 vertexTexCoords = readBufferWithGet getTexCoords
 
+-- | Decode a buffer using the given Binary decoder
 readBufferWithGet
   :: Storable storable
   => Get (Vector storable)
@@ -91,6 +101,7 @@ readBufferWithGet getter gltf buffers' accessorId
       (readFromBuffer undefined getter)
       (bufferAccessor gltf buffers' accessorId)
 
+-- | Look up a Buffer from a GlTF and AccessorIx
 bufferAccessor
   :: GlTF
   -> Vector GltfBuffer
@@ -110,22 +121,28 @@ bufferAccessor GlTF{..} buffers' accessorId = do
       buffer = buffer
     }
 
+-- | Look up a BufferView by Accessor
 lookupBufferViewFromAccessor :: Accessor -> Vector BufferView -> Maybe BufferView
 lookupBufferViewFromAccessor Accessor{..} bufferViews
   = bufferView >>= flip lookupBufferView bufferViews
 
+-- | Look up a Buffer by BufferView
 lookupBufferFromBufferView :: BufferView -> Vector GltfBuffer -> Maybe GltfBuffer
 lookupBufferFromBufferView BufferView{..} = lookupBuffer buffer
 
+-- | Look up an Accessor by Ix
 lookupAccessor :: AccessorIx -> Vector Accessor -> Maybe Accessor
 lookupAccessor (AccessorIx accessorId) = (Vector.!? accessorId)
 
+-- | Look up a BufferView by Ix
 lookupBufferView :: BufferViewIx -> Vector BufferView -> Maybe BufferView
 lookupBufferView (BufferViewIx bufferViewId) = (Vector.!? bufferViewId)
 
+-- | Look up a Buffer by Ix
 lookupBuffer :: BufferIx -> Vector GltfBuffer -> Maybe GltfBuffer
 lookupBuffer (BufferIx bufferId) = (Vector.!? bufferId)
 
+-- | Decode a buffer using the given Binary decoder
 readFromBuffer
   :: Storable storable
   => storable
@@ -137,30 +154,39 @@ readFromBuffer storable getter BufferAccessor{..}
   where payload' = ByteString.take len' . ByteString.drop offset . unBuffer $ buffer
         len' = count * sizeOf storable
 
+-- | Vertex indices binary decoder
 getIndices :: Get (Vector Int)
 getIndices = getScalar (fromIntegral <$> getUnsignedShort)
 
+-- | Vertex positions binary decoder
 getPositions :: Get (Vector (V3 Float))
 getPositions = getVec3 getFloat
 
+-- | Vertex normals binary decoder
 getNormals :: Get (Vector (V3 Float))
 getNormals = getVec3 getFloat
 
+-- | Texture coordinates binary decoder
 getTexCoords :: Get (Vector (V2 Float))
 getTexCoords = getVec2 getFloat
 
+-- | Scalar (simple) type binary decoder
 getScalar :: Get a -> Get (Vector a)
 getScalar = getVector
 
+-- | 2D Vector binary decoder
 getVec2 :: Get a -> Get (Vector (V2 a))
 getVec2 getter = getVector $ V2 <$> getter <*> getter
 
+-- | 3D Vector binary decoder
 getVec3 :: Get a -> Get (Vector (V3 a))
 getVec3 getter = getVector $ V3 <$> getter <*> getter <*> getter
 
+-- | 4D Vector binary decoder
 getVec4 :: Get a -> Get (Vector (V4 a))
 getVec4 getter = getVector $ V4 <$> getter <*> getter <*> getter <*> getter
 
+-- | 2x2 Matrix binary decoder
 getMat2 :: Get a -> Get (Vector (M22 a))
 getMat2 getter = getVector $ do
   m1_1 <- getter
@@ -173,6 +199,7 @@ getMat2 getter = getVector $ do
     (V2 m1_1 m2_1)
     (V2 m1_2 m2_2)
 
+-- | 3x3 Matrix binary decoder
 getMat3 :: Get a -> Get (Vector (M33 a))
 getMat3 getter = getVector $ do
   m1_1 <- getter
@@ -192,6 +219,7 @@ getMat3 getter = getVector $ do
     (V3 m1_2 m2_2 m3_2)
     (V3 m1_3 m2_3 m3_3)
 
+-- | 4x4 Matrix binary decoder
 getMat4 :: Get a -> Get (Vector (M44 a))
 getMat4 getter = getVector $ do
   m1_1 <- getter
@@ -220,27 +248,35 @@ getMat4 getter = getVector $ do
     (V4 m1_3 m2_3 m3_3 m4_3)
     (V4 m1_4 m2_4 m3_4 m4_4)
 
+-- | Byte binary decoder
 getByte :: Get Int8
 getByte = getInt8
 
+-- | Unsigned Byte binary decoder
 getUnsignedByte :: Get Word8
 getUnsignedByte = getWord8
 
+-- | Short binary decoder
 getShort :: Get Int16
 getShort = getInt16le
 
+-- | Unsigned Short binary decoder
 getUnsignedShort :: Get Word16
 getUnsignedShort = getWord16le
 
+-- | Unsigned Int binary decoder
 getUnsignedInt :: Get Word32
 getUnsignedInt = getWord32le
 
+-- | Float binary decoder
 getFloat :: Get Float
 getFloat = getFloatle
 
+-- | Boxed Vector binary decoder
 getVector :: Get a -> Get (Vector a)
 getVector = fmap Vector.fromList . getList
 
+-- | List binary decoder
 getList :: Get a -> Get [a]
 getList getter = do
   empty <- isEmpty
