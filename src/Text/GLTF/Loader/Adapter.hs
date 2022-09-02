@@ -131,10 +131,11 @@ adaptMeshPrimitive
   -> GlTF.Mesh.MeshPrimitive
   -> MeshPrimitive
 adaptMeshPrimitive gltf buffers' GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
-    { meshPrimitiveMode = adaptMeshPrimitiveMode mode,
-      meshPrimitiveIndices = maybe mempty (vertexIndices gltf buffers') indices,
-      meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
+    { meshPrimitiveIndices = maybe mempty (vertexIndices gltf buffers') indices,
+      meshPrimitiveMaterial = GlTF.Material.unMaterialIx <$> material,
+      meshPrimitiveMode = adaptMeshPrimitiveMode mode,
       meshPrimitiveNormals = maybe mempty (vertexNormals gltf buffers') normals,
+      meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
       meshPrimitiveTexCoords = maybe mempty (vertexTexCoords gltf buffers') texCoords
     }
     where positions = attributes HashMap.!? attributePosition

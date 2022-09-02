@@ -59,6 +59,7 @@ spec = do
                                        21, 18, 12, 21, 12, 15, 16, 3, 9, 16, 9,
                                        22, 5, 2, 8, 5, 8, 11, 17, 13, 0, 17, 0, 4
                                      ],
+                                 meshPrimitiveMaterial = Just 0,
                                  meshPrimitivePositions
                                    =  [ V3 1.0 1.0 (-1.0),      -- 1
                                         V3 1.0 1.0 (-1.0),      -- 2

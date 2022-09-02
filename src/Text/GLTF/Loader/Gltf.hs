@@ -38,10 +38,11 @@ module Text.GLTF.Loader.Gltf
     _nodeTranslation,
     _nodeWeights,
     -- ** MeshPrimitive Lenses
-    _meshPrimitiveMode,
+    _meshPrimitiveMaterial,
     _meshPrimitiveIndices,
-    _meshPrimitivePositions,
+    _meshPrimitiveMode,
     _meshPrimitiveNormals,
+    _meshPrimitivePositions,
     -- ** PbrMetallicRoughness Lenses
     _pbrBaseColorFactor,
     _pbrMetallicFactor,
@@ -90,10 +91,12 @@ data Node = Node
   } deriving (Eq, Show)
 
 data MeshPrimitive = MeshPrimitive
-  { meshPrimitiveMode :: MeshPrimitiveMode,
+  {
     meshPrimitiveIndices :: Vector Int,
-    meshPrimitivePositions :: Vector (V3 Float),
+    meshPrimitiveMaterial :: Maybe Int,
+    meshPrimitiveMode :: MeshPrimitiveMode,
     meshPrimitiveNormals :: Vector (V3 Float),
+    meshPrimitivePositions :: Vector (V3 Float),
     meshPrimitiveTexCoords :: Vector (V2 Float)
   } deriving (Eq, Show)
 
@@ -210,25 +213,30 @@ _nodeTranslation = lens
 _nodeWeights :: Lens' Node [Float]
 _nodeWeights = lens nodeWeights (\node weights' -> node { nodeWeights = weights' })
 
-_meshPrimitiveMode :: Lens' MeshPrimitive MeshPrimitiveMode
-_meshPrimitiveMode = lens
-  meshPrimitiveMode
-  (\primitive' mode -> primitive' { meshPrimitiveMode = mode })
-
 _meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Int)
 _meshPrimitiveIndices = lens
   meshPrimitiveIndices
   (\primitive' indices -> primitive' { meshPrimitiveIndices = indices })
 
-_meshPrimitivePositions :: Lens' MeshPrimitive (Vector (V3 Float))
-_meshPrimitivePositions = lens
-  meshPrimitivePositions
-  (\primitive' positions -> primitive' { meshPrimitivePositions = positions })
+_meshPrimitiveMaterial :: Lens' MeshPrimitive (Maybe Int)
+_meshPrimitiveMaterial = lens
+  meshPrimitiveMaterial
+  (\primitive' material -> primitive' { meshPrimitiveMaterial = material })
+
+_meshPrimitiveMode :: Lens' MeshPrimitive MeshPrimitiveMode
+_meshPrimitiveMode = lens
+  meshPrimitiveMode
+  (\primitive' mode -> primitive' { meshPrimitiveMode = mode })
 
 _meshPrimitiveNormals :: Lens' MeshPrimitive (Vector (V3 Float))
 _meshPrimitiveNormals = lens
   meshPrimitiveNormals
   (\primitive' normals -> primitive' { meshPrimitiveNormals = normals })
+
+_meshPrimitivePositions :: Lens' MeshPrimitive (Vector (V3 Float))
+_meshPrimitivePositions = lens
+  meshPrimitivePositions
+  (\primitive' positions -> primitive' { meshPrimitivePositions = positions })
 
 _meshPrimitiveTexCoords :: Lens' MeshPrimitive (Vector (V2 Float))
 _meshPrimitiveTexCoords = lens

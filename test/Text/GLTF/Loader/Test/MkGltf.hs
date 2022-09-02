@@ -289,7 +289,7 @@ mkCodecMeshPrimitive = Mesh.MeshPrimitive
       ],
     mode = Mesh.MeshPrimitiveMode 4,
     indices = Just $ Accessor.AccessorIx 0,
-    material = Nothing,
+    material = Just $ Material.MaterialIx 1,
     targets = Nothing,
     extensions = Nothing,
     extras = Nothing

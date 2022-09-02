@@ -132,7 +132,26 @@ spec = do
           loaderMeshPrimitive' = set _meshPrimitiveIndices [] loaderMeshPrimitive
       
       adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive `shouldBe` loaderMeshPrimitive
+
+    it "ignores indices when unspecified" $ do
+      buffers' <- buffers
+      
+      let codecMeshPrimitive' = mkCodecMeshPrimitive
+            { Mesh.indices = Nothing }
+          loaderMeshPrimitive' = loaderMeshPrimitive & _meshPrimitiveIndices .~ []
+
       adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive' `shouldBe` loaderMeshPrimitive'
+
+    it "ignores material when unspecified" $ do
+      buffers' <- buffers
+
+      let codecMeshPrimitive' = mkCodecMeshPrimitive
+            { Mesh.material = Nothing }
+          loaderMeshPrimitive' = loaderMeshPrimitive & _meshPrimitiveMaterial .~ Nothing
+
+      adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive'
+        `shouldBe` loaderMeshPrimitive'
+      
     
   describe "adaptMeshPrimitiveMode" $
     it "Adapts all expected modes" $ do
@@ -201,9 +220,10 @@ loaderPbrMetallicRoughness = PbrMetallicRoughness
 
 loaderMeshPrimitive :: MeshPrimitive
 loaderMeshPrimitive = MeshPrimitive
-  { meshPrimitiveMode = Triangles,
-    meshPrimitiveIndices = [1..4],
-    meshPrimitivePositions = fmap (\x -> V3 x x x) [1..4],
+  { meshPrimitiveIndices = [1..4],
+    meshPrimitiveMaterial = Just 1,
+    meshPrimitiveMode = Triangles,
     meshPrimitiveNormals = fmap (\x -> V3 x x x) [5..8],
+    meshPrimitivePositions = fmap (\x -> V3 x x x) [1..4],
     meshPrimitiveTexCoords = fmap (\x -> V2 x x) [9..12]
   }
