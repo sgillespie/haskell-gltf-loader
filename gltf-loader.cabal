@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           gltf-loader
-version:        0.1.0.0
+version:        0.2.0.0
 synopsis:       High level GlTF loader
 description:    Please see the README on Github at <https://github.com/sgillespie/haskell-gltf-loader#readme>
 category:       Graphics
