@@ -1,6 +1,7 @@
 module Text.GLTF.Loader.BufferAccessorSpec (spec) where
 
 import Text.GLTF.Loader.BufferAccessor
+import Text.GLTF.Loader.Decoders
 import Text.GLTF.Loader.Test.MkGltf
 
 import Linear (V3(..))
@@ -43,7 +44,6 @@ spec = do
       buffers <- loadBuffers gltf'
 
       buffers `shouldBe` []
-    
   
   describe "vertexIndices" $ do
     it "Reads basic values from buffer" $ do

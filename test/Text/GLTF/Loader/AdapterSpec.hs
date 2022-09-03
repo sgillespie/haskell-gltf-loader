@@ -126,11 +126,6 @@ spec = do
   describe "adaptMeshPrimitive" $ do
     it "adapts a basic primitive" $ do
       buffers' <- buffers
-
-      let codecMeshPrimitive' = mkCodecMeshPrimitive
-            { Mesh.indices = Nothing }
-          loaderMeshPrimitive' = set _meshPrimitiveIndices [] loaderMeshPrimitive
-      
       adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive `shouldBe` loaderMeshPrimitive
 
     it "ignores indices when unspecified" $ do
