@@ -80,7 +80,7 @@ library:
     - unordered-containers
 
 executables:
-  gltf-loader-exe:
+  gltf-loader:
     main: Main.hs
     source-dirs: app
     dependencies:

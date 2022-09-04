@@ -54,20 +54,22 @@ This includes a CLI utility to inspect GlTF files
 
 ## Roadmap
 
-Currently, only retreiving indices are supported, but we hope to support the majority of GlTF
-features:
+Currently, only geometries and PBR materials are supported, but we hope to support the
+majority of GlTF features:
 
  - [ ] Animitions
- - [ ] Asset
+ - [x] Asset
  - [ ] Cameras
  - [ ] Images
  - [ ] Materials
+   - [x] PBR Metallic Roughness
+   - [ ] Textures
  - [x] Meshes
     - [x] Positions
     - [x] Indices
-    - [ ] Normals
-    - [ ] Texture Coordinates
- - [ ] Node
+    - [x] Normals
+    - [x] Texture Coordinates
+ - [x] Nodes
  - [ ] Samplers
  - [ ] Skins
 

@@ -90,7 +90,7 @@ library
     , unordered-containers
   default-language: Haskell2010
 
-executable gltf-loader-exe
+executable gltf-loader
   main-is: Main.hs
   other-modules:
       Command.GLTF.Loader
