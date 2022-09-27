@@ -1,10 +1,9 @@
-
 module Text.GLTF.Loader
   ( -- * Scene loading functions
     fromFile,
     fromByteString,
 
-    -- * GLTF Types
+    -- * GLTF Data Types
     module Text.GLTF.Loader.Gltf,
 
     -- * Loading Errors
@@ -34,4 +33,4 @@ toGltfResult res
   = res
     & over _Left (ReadError . fromString)
     & traverseOf _Right toGltfResult'
-  where toGltfResult' gltf = adaptGltf gltf <$> loadBuffers gltf
+   where toGltfResult' gltf = adaptGltf gltf <$> loadBuffers gltf
