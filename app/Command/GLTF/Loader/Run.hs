@@ -80,11 +80,17 @@ reportMeshVerbose gltf mesh = do
   forM_ (mesh ^. _meshPrimitives) $ \primitive' -> do
     -- Report Vertices
     logInfo "      Vertices:"
-
+    
     let positions = primitive' ^. _meshPrimitivePositions
     forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
       forM_ (positions Vector.!? index) $ \position -> do
         logInfo $ "        [" <> display index <> "]: " <> displayV3 position
+
+    logInfo "      Normals:"
+    let normals = primitive' ^. _meshPrimitiveNormals
+    forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
+      forM_ (normals Vector.!? index) $ \normal -> do
+        logInfo $ "        [" <> display index <> "]: " <> displayV3 normal
 
     -- Report material
     forM_ (primitive' ^. _meshPrimitiveMaterial) $ \materialId -> do
