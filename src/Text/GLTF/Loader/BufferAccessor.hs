@@ -54,7 +54,7 @@ loadBuffers GlTF{buffers=buffers} = do
     return $ GltfBuffer payload
 
 -- | Decode vertex indices
-vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Int
+vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word16
 vertexIndices = readBufferWithGet getIndices
 
 -- | Decode vertex positions

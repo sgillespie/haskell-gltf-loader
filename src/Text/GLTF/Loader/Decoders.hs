@@ -27,8 +27,8 @@ import RIO hiding (min, max)
 import qualified RIO.Vector as Vector
 
 -- | Vertex indices binary decoder
-getIndices :: Get (Vector Int)
-getIndices = getScalar (fromIntegral <$> getUnsignedShort)
+getIndices :: Get (Vector Word16)
+getIndices = getScalar getUnsignedShort
 
 -- | Vertex positions binary decoder
 getPositions :: Get (Vector (V3 Float))

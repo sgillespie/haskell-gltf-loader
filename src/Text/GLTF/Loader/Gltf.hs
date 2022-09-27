@@ -119,7 +119,7 @@ data Node = Node
 -- | Geometry to be rendered with the given material
 data MeshPrimitive = MeshPrimitive
   { -- | A Vector of vertex indices.
-    meshPrimitiveIndices :: Vector Int,
+    meshPrimitiveIndices :: Vector Word16,
     -- | The index of the material to apply to this primitive when rendering.
     meshPrimitiveMaterial :: Maybe Int,
     -- | The topology type of primitives to render.
@@ -281,7 +281,7 @@ _nodeWeights :: Lens' Node [Float]
 _nodeWeights = lens nodeWeights (\node weights' -> node { nodeWeights = weights' })
 
 -- | A Vector of vertex indices.
-_meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Int)
+_meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Word16)
 _meshPrimitiveIndices = lens
   meshPrimitiveIndices
   (\primitive' indices -> primitive' { meshPrimitiveIndices = indices })

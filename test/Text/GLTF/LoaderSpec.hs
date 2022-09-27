@@ -29,7 +29,7 @@ spec = do
       let expected = Gltf
             { gltfAsset = Asset
                 { assetVersion = "2.0",
-                  assetGenerator = Just "Khronos glTF Blender I/O v3.2.40",
+                  assetGenerator = Just "Khronos glTF Blender I/O v3.3.27",
                   assetCopyright = Nothing,
                   assetMinVersion = Nothing
                 },
@@ -42,9 +42,9 @@ spec = do
                         materialEmissiveFactor = V3 0.0 0.0 0.0,
                         materialName = Just "Material",
                         materialPbrMetallicRoughness = Just $ PbrMetallicRoughness
-                          { pbrBaseColorFactor = V4 0.8 0.8 0.8 1.0,
+                          { pbrBaseColorFactor = V4 1 1 1 1,
                             pbrMetallicFactor = 0.0,
-                            pbrRoughnessFactor = 0.4
+                            pbrRoughnessFactor = 0.5
                           }
                       }
                   ],

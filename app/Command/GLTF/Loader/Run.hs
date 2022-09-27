@@ -83,13 +83,13 @@ reportMeshVerbose gltf mesh = do
     
     let positions = primitive' ^. _meshPrimitivePositions
     forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
-      forM_ (positions Vector.!? index) $ \position -> do
+      forM_ (positions Vector.!? fromIntegral index) $ \position -> do
         logInfo $ "        [" <> display index <> "]: " <> displayV3 position
 
     logInfo "      Normals:"
     let normals = primitive' ^. _meshPrimitiveNormals
     forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
-      forM_ (normals Vector.!? index) $ \normal -> do
+      forM_ (normals Vector.!? fromIntegral index) $ \normal -> do
         logInfo $ "        [" <> display index <> "]: " <> displayV3 normal
 
     -- Report material
@@ -124,7 +124,7 @@ reportMeshSummary mesh = do
 
 reportMaterial :: Material -> RIO App ()
 reportMaterial material = do
-  logInfo $ "      Material:"
+  logInfo "      Material:"
   logInfo $ "        Name: " <>
     material ^. _materialName . to (display . fromMaybe "Unknown")
   
