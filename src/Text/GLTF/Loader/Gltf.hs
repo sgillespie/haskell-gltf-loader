@@ -9,6 +9,7 @@ module Text.GLTF.Loader.Gltf
     MeshPrimitive(..),
     PbrMetallicRoughness(..),
     MeshPrimitiveMode(..),
+    TextureInfo(..),
     -- * Lenses
     -- ** Top-level Gltf Lenses
     _asset,
@@ -46,8 +47,12 @@ module Text.GLTF.Loader.Gltf
     _meshPrimitivePositions,
     -- ** PbrMetallicRoughness Lenses
     _pbrBaseColorFactor,
+    _pbrBaseColorTexture,
     _pbrMetallicFactor,
-    _pbrRoughnessFactor
+    _pbrRoughnessFactor,
+    -- ** TextureInfo Lenses
+    _textureInfoId,
+    _textureInfoTexCoord
   ) where
 
 import Linear
@@ -148,6 +153,8 @@ data MaterialAlphaMode
 data PbrMetallicRoughness = PbrMetallicRoughness
   { -- | The factors for the base color of the material.
     pbrBaseColorFactor :: V4 Float,
+    -- | The base color texture
+    pbrBaseColorTexture :: Maybe TextureInfo,
     -- | The factor for the metalness of the material.
     pbrMetallicFactor :: Float,
     -- | The factor for the roughness of the material.
@@ -164,6 +171,16 @@ data MeshPrimitiveMode
   | TriangleStrip
   | TriangleFan
   deriving (Eq, Enum, Show)
+
+-- | Reference to a texture.
+data TextureInfo = TextureInfo
+  { -- | The index of the texture.
+    textureId :: Int,
+    -- | This integer value is used to construct a string in the format
+    -- TEXCOORD_<set_index> which is a reference to a key in mesh.primitives.attributes
+    -- (e.g. a value of 0 corresponds to TEXCOORD_0).
+    textureTexCoord :: Int
+  } deriving (Eq, Show)
 
 -- | Metadata about the glTF asset
 _asset :: Lens' Gltf Asset
@@ -322,6 +339,12 @@ _pbrBaseColorFactor = lens
   pbrBaseColorFactor
   (\pbr baseColor -> pbr { pbrBaseColorFactor = baseColor })
 
+-- | The base color texture
+_pbrBaseColorTexture :: Lens' PbrMetallicRoughness (Maybe TextureInfo)
+_pbrBaseColorTexture = lens
+  pbrBaseColorTexture
+  (\pbr texture -> pbr { pbrBaseColorTexture = texture })
+
 -- | The factor for the metalness of the material.
 _pbrMetallicFactor :: Lens' PbrMetallicRoughness Float
 _pbrMetallicFactor = lens
@@ -333,3 +356,17 @@ _pbrRoughnessFactor :: Lens' PbrMetallicRoughness Float
 _pbrRoughnessFactor = lens
   pbrRoughnessFactor
   (\pbr roughnessFactor -> pbr { pbrRoughnessFactor = roughnessFactor })
+
+-- | The index of the texture.
+_textureInfoId :: Lens' TextureInfo Int
+_textureInfoId = lens
+  textureId
+  (\texInfo id' -> texInfo { textureId = id' })
+
+-- | This integer value is used to construct a string in the format
+-- TEXCOORD_<set_index> which is a reference to a key in mesh.primitives.attributes
+-- (e.g. a value of 0 corresponds to TEXCOORD_0).
+_textureInfoTexCoord :: Lens' TextureInfo Int
+_textureInfoTexCoord = lens
+  textureTexCoord
+  (\texInfo coord -> texInfo { textureTexCoord = coord })

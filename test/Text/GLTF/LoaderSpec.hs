@@ -43,6 +43,10 @@ spec = do
                         materialName = Just "Material",
                         materialPbrMetallicRoughness = Just $ PbrMetallicRoughness
                           { pbrBaseColorFactor = V4 1 1 1 1,
+                            pbrBaseColorTexture = Just $ TextureInfo
+                              { textureId = 0,
+                                textureTexCoord = 0
+                              },
                             pbrMetallicFactor = 0.0,
                             pbrRoughnessFactor = 0.5
                           }

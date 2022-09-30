@@ -19,6 +19,7 @@ import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Node as Node
+import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Codec.GlTF.URI as URI
 import qualified Data.HashMap.Strict as HashMap
 
@@ -251,7 +252,7 @@ mkCodecPbrMetallicRoughness = PbrMetallicRoughness.PbrMetallicRoughness
     metallicFactor = 1.0,
     roughnessFactor = 2.0,
     metallicRoughnessTexture = Nothing,
-    baseColorTexture = Nothing,
+    baseColorTexture = Just mkCodecBaseColorTexture,
     extensions = Nothing,
     extras = Nothing
   }
@@ -293,6 +294,15 @@ mkCodecMeshPrimitive = Mesh.MeshPrimitive
     targets = Nothing,
     extensions = Nothing,
     extras = Nothing
+  }
+
+mkCodecBaseColorTexture :: TextureInfo.TextureInfo_
+mkCodecBaseColorTexture = TextureInfo.TextureInfo
+  { extensions = Nothing,
+    extras = Nothing,
+    index = 15,
+    subtype = TextureInfo.Basic,
+    texCoord = 10
   }
 
 mkCodecNode :: Node.Node

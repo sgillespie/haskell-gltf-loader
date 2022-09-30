@@ -30,6 +30,7 @@ import qualified Codec.GlTF.Material as GlTF.Material
 import qualified Codec.GlTF.PbrMetallicRoughness as GlTF.PbrMetallicRoughness
 import qualified Codec.GlTF.Mesh as GlTF.Mesh
 import qualified Codec.GlTF.Node as GlTF.Node
+import qualified Codec.GlTF.TextureInfo as GlTF.TextureInfo
 import qualified Data.HashMap.Strict as HashMap
 
 attributePosition :: Text
@@ -114,6 +115,7 @@ adaptPbrMetallicRoughness
 adaptPbrMetallicRoughness GlTF.PbrMetallicRoughness.PbrMetallicRoughness{..}
   = PbrMetallicRoughness
     { pbrBaseColorFactor = toV4 baseColorFactor,
+      pbrBaseColorTexture = adaptTextureInfo <$> baseColorTexture,
       pbrMetallicFactor = metallicFactor,
       pbrRoughnessFactor = roughnessFactor
     }
@@ -124,6 +126,12 @@ adaptMeshPrimitives
   -> Vector GlTF.Mesh.MeshPrimitive
   -> Vector MeshPrimitive
 adaptMeshPrimitives gltf = fmap . adaptMeshPrimitive gltf
+
+adaptTextureInfo :: GlTF.TextureInfo.TextureInfo a -> TextureInfo
+adaptTextureInfo GlTF.TextureInfo.TextureInfo{..} = TextureInfo
+  { textureId = index,
+    textureTexCoord = texCoord
+  }
 
 adaptMeshPrimitive
   :: GlTF.GlTF

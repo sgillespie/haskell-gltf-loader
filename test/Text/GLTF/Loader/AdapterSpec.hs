@@ -209,6 +209,7 @@ loaderNode = Node
 loaderPbrMetallicRoughness :: PbrMetallicRoughness
 loaderPbrMetallicRoughness = PbrMetallicRoughness
   { pbrBaseColorFactor = V4 1.0 2.0 3.0 4.0,
+    pbrBaseColorTexture = Just loaderBaseColorTexture,
     pbrMetallicFactor = 1.0,
     pbrRoughnessFactor = 2.0
   }
@@ -221,4 +222,10 @@ loaderMeshPrimitive = MeshPrimitive
     meshPrimitiveNormals = fmap (\x -> V3 x x x) [5..8],
     meshPrimitivePositions = fmap (\x -> V3 x x x) [1..4],
     meshPrimitiveTexCoords = fmap (\x -> V2 x x) [9..12]
+  }
+
+loaderBaseColorTexture :: TextureInfo
+loaderBaseColorTexture = TextureInfo
+  { textureId = 15,
+    textureTexCoord = 10
   }
