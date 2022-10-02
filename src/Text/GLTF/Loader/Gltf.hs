@@ -2,6 +2,7 @@ module Text.GLTF.Loader.Gltf
   ( -- * Data constructors
     Gltf(..),
     Asset(..),
+    Image(..),
     Material(..),
     MaterialAlphaMode(..),
     Mesh(..),
@@ -9,18 +10,27 @@ module Text.GLTF.Loader.Gltf
     MeshPrimitive(..),
     PbrMetallicRoughness(..),
     MeshPrimitiveMode(..),
+    Sampler(..),
+    Texture(..),
     TextureInfo(..),
     -- * Lenses
     -- ** Top-level Gltf Lenses
     _asset,
+    _images,
     _materials,
     _meshes,
     _nodes,
+    _samplers,
+    _textures,
     -- ** Asset Lenses
     _assetVersion,
     _assetCopyright,
     _assetGenerator,
     _assetMinVersion,
+    -- ** Image Lenses
+    _imageData,
+    _imageMimeType,
+    _imageName,
     -- ** Material Lenses
     _materialAlphaCutoff,
     _materialAlphaMode,
@@ -39,6 +49,16 @@ module Text.GLTF.Loader.Gltf
     _nodeScale,
     _nodeTranslation,
     _nodeWeights,
+    -- ** Sampler Lenses
+    _samplerMagFilter,
+    _samplerMinFilter,
+    _samplerName,
+    _samplerWrapS,
+    _samplerWrapT,
+    -- ** Texture Lenses
+    _textureName,
+    _textureSamplerId,
+    _textureSourceId,
     -- ** MeshPrimitive Lenses
     _meshPrimitiveMaterial,
     _meshPrimitiveIndices,
@@ -61,9 +81,12 @@ import RIO
 -- | The root data type for a glTF asset
 data Gltf = Gltf
   { gltfAsset :: Asset,
+    gltfImages :: Vector Image,
     gltfMaterials :: Vector Material,
     gltfMeshes :: Vector Mesh,
-    gltfNodes :: Vector Node
+    gltfNodes :: Vector Node,
+    gltfSamplers :: Vector Sampler,
+    gltfTextures :: Vector Texture
   } deriving (Eq, Show)
 
 -- | Metadata about the glTF asset
@@ -76,6 +99,16 @@ data Asset = Asset
     assetGenerator :: Maybe Text,
     -- | The minimum glTF version that this asset targets
     assetMinVersion :: Maybe Text
+  } deriving (Eq, Show)
+
+-- | Image data used to create a texture.
+data Image = Image
+  { -- | The binary data of the image
+    imageData :: ByteString,
+    -- | The image’s media type.
+    imageMimeType :: Text,
+    -- | The user-defined name of this object.
+    imageName :: Maybe Text
   } deriving (Eq, Show)
 
 -- | The material appearance of a primitive
@@ -121,6 +154,30 @@ data Node = Node
     nodeWeights :: [Float]
   } deriving (Eq, Show)
 
+-- | Texture sampler properties for filtering and wrapping modes.
+data Sampler = Sampler
+  { -- | Magnification filter.
+    samplerMagFilter :: Maybe MagFilter,
+    -- | Minification filter.
+    samplerMinFilter :: Maybe MinFilter,
+    -- | The user-defined name of this object.
+    samplerName :: Maybe Text,
+    -- | S (U) wrapping mode. All valid values correspond to WebGL enums.
+    samplerWrapS :: SamplerWrap,
+    -- | T (V) wrapping mode. All valid values correspond to WebGL enums.
+    samplerWrapT :: SamplerWrap
+  } deriving (Eq, Show)
+
+-- | A texture and its sampler.
+data Texture = Texture
+  { -- | The user-defined name of this object.
+    textureName :: Maybe Text,
+    -- | The index of the sampler used by this texture.
+    textureSamplerId :: Maybe Int,
+    -- | The index of the image used by this texture.
+    textureSourceId :: Maybe Int
+  } deriving (Eq, Show)
+
 -- | Geometry to be rendered with the given material
 data MeshPrimitive = MeshPrimitive
   { -- | A Vector of vertex indices.
@@ -161,6 +218,27 @@ data PbrMetallicRoughness = PbrMetallicRoughness
     pbrRoughnessFactor :: Float
   } deriving (Eq, Show)
 
+-- | Magnification filter.
+data MagFilter = MagLinear | MagNearest
+  deriving (Enum, Eq, Show)
+
+-- | Minification Filter.
+data MinFilter
+  = MinNearest
+  | MinLinear
+  | MinNearestMipmapNearest
+  | MinLinearMipmapNearest
+  | MinNearestMipmapLinear
+  | MinLinearMipmapLinear
+  deriving (Enum, Eq, Show)
+
+-- | Sampler wrapping mode.  
+data SamplerWrap
+  = ClampToEdge
+  | MirroredRepeat
+  | Repeat
+  deriving (Enum, Eq, Show)
+
 -- | The topology type of primitives to render.
 data MeshPrimitiveMode
   = Points
@@ -186,6 +264,10 @@ data TextureInfo = TextureInfo
 _asset :: Lens' Gltf Asset
 _asset = lens gltfAsset (\gltf asset -> gltf { gltfAsset = asset })
 
+-- | A Vector of Images. An Image defines data used to create a texture.
+_images :: Lens' Gltf (Vector Image)
+_images = lens gltfImages (\gltf images -> gltf { gltfImages = images })
+
 -- | A Vector of Materials. A Material defines the appearance of a primitive.
 _materials :: Lens' Gltf (Vector Material)
 _materials = lens gltfMaterials (\gltf mats -> gltf { gltfMaterials = mats })
@@ -197,6 +279,15 @@ _meshes = lens gltfMeshes (\gltf meshes -> gltf { gltfMeshes = meshes })
 -- | A Vector of Nodes in the hierarchy.
 _nodes :: Lens' Gltf (Vector Node)
 _nodes = lens gltfNodes (\gltf nodes -> gltf { gltfNodes = nodes })
+
+-- | A Vector of Texture Samplers. Texture Sampler defines properties for filtering and
+-- wrapping modes.
+_samplers :: Lens' Gltf (Vector Sampler)
+_samplers = lens gltfSamplers (\gltf samplers -> gltf { gltfSamplers = samplers })
+
+-- | A texture and its sampler.
+_textures :: Lens' Gltf (Vector Texture)
+_textures = lens gltfTextures (\gltf texs -> gltf { gltfTextures = texs })
 
 -- | The glTF version that this asset targets.
 _assetVersion :: Lens' Asset Text
@@ -219,6 +310,18 @@ _assetMinVersion :: Lens' Asset (Maybe Text)
 _assetMinVersion = lens
   assetMinVersion
   (\asset minVersion' -> asset { assetMinVersion = minVersion' })
+
+-- | The binary data of the image
+_imageData :: Lens' Image ByteString
+_imageData = lens imageData (\img data' -> img { imageData = data' })
+
+-- | The image’s media type.
+_imageMimeType :: Lens' Image Text
+_imageMimeType = lens imageMimeType (\img mime -> img { imageMimeType = mime })
+
+-- | The user-defined name of this object.
+_imageName :: Lens' Image (Maybe Text)
+_imageName = lens imageName (\img name -> img { imageName = name })
 
 -- | Specifies the cutoff threshold when in MASK alpha mode.
 _materialAlphaCutoff :: Lens' Material Float
@@ -296,6 +399,52 @@ _nodeTranslation = lens
 -- | The weights of the instantiated morph target.
 _nodeWeights :: Lens' Node [Float]
 _nodeWeights = lens nodeWeights (\node weights' -> node { nodeWeights = weights' })
+
+-- | Magnification filter.
+_samplerMagFilter :: Lens' Sampler (Maybe MagFilter)
+_samplerMagFilter = lens
+  samplerMagFilter
+  (\sampler mag -> sampler { samplerMagFilter = mag })
+
+-- | Minification filter.
+_samplerMinFilter :: Lens' Sampler (Maybe MinFilter)
+_samplerMinFilter = lens
+  samplerMinFilter
+  (\sampler min' -> sampler { samplerMinFilter = min' })
+
+-- | The user-defined name of this object.
+_samplerName :: Lens' Sampler (Maybe Text)
+_samplerName = lens
+  samplerName
+  (\sampler name -> sampler { samplerName = name })
+
+-- | S (U) wrapping mode.
+_samplerWrapS :: Lens' Sampler SamplerWrap
+_samplerWrapS = lens
+  samplerWrapS
+  (\sampler wrapS -> sampler { samplerWrapS = wrapS })
+
+-- | T (V) wrapping mode.
+_samplerWrapT :: Lens' Sampler SamplerWrap
+_samplerWrapT = lens
+  samplerWrapT
+  (\sampler wrapT -> sampler { samplerWrapT = wrapT })
+
+-- | The user-defined name of this object.
+_textureName :: Lens' Texture (Maybe Text)
+_textureName = lens textureName (\tex name -> tex { textureName = name })
+
+-- | The index of the sampler used by this texture.
+_textureSamplerId :: Lens' Texture (Maybe Int)
+_textureSamplerId = lens
+  textureSamplerId
+  (\tex sampler -> tex { textureSamplerId = sampler })
+
+-- | The index of the image used by this texture.
+_textureSourceId :: Lens' Texture (Maybe Int)
+_textureSourceId = lens
+  textureSourceId
+  (\tex source -> tex { textureSourceId = source })
 
 -- | A Vector of vertex indices.
 _meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Word16)

@@ -34,6 +34,8 @@ spec = do
                   assetMinVersion = Nothing
                 },
 
+              gltfImages = [],
+
               gltfMaterials
                 = [ Material
                       { materialAlphaCutoff = 0.5,
@@ -158,7 +160,10 @@ spec = do
                         nodeTranslation = Nothing,
                         nodeWeights = []
                       }
-                  ]
+                  ],
+
+              gltfSamplers = [],
+              gltfTextures = []
             }
       
       gltf `shouldBe` Right expected

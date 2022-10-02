@@ -45,9 +45,12 @@ attributeTexCoord = "TEXCOORD_0"
 adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Gltf
 adaptGltf gltf@GlTF.GlTF{..} buffers' = Gltf
     { gltfAsset = adaptAsset asset,
+      gltfImages = [],
       gltfMaterials = adaptMaterials materials,
       gltfMeshes = adaptMeshes gltf buffers' meshes,
-      gltfNodes = adaptNodes nodes
+      gltfNodes = adaptNodes nodes,
+      gltfSamplers = [],
+      gltfTextures = []
     }
 
 adaptAsset :: GlTF.Asset.Asset -> Asset

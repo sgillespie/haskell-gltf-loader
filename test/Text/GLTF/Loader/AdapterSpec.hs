@@ -166,9 +166,12 @@ buffers = loadBuffers mkCodecGltf
 loaderGltf :: Gltf
 loaderGltf = Gltf
   { gltfAsset = loaderAsset,
+    gltfImages = [],
     gltfMaterials = [loaderMaterial],
     gltfMeshes = [loaderMesh],
-    gltfNodes = [loaderNode]
+    gltfNodes = [loaderNode],
+    gltfSamplers = [],
+    gltfTextures = []
   }
 
 loaderAsset :: Asset
