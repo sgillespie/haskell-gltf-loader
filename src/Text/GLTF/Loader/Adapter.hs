@@ -25,12 +25,13 @@ import Linear (V3(..), V4(..))
 import RIO
 import RIO.Partial (toEnum)
 import qualified Codec.GlTF as GlTF
-import qualified Codec.GlTF.Asset as GlTF.Asset
-import qualified Codec.GlTF.Material as GlTF.Material
-import qualified Codec.GlTF.PbrMetallicRoughness as GlTF.PbrMetallicRoughness
-import qualified Codec.GlTF.Mesh as GlTF.Mesh
-import qualified Codec.GlTF.Node as GlTF.Node
-import qualified Codec.GlTF.TextureInfo as GlTF.TextureInfo
+import qualified Codec.GlTF.Asset as Asset
+import qualified Codec.GlTF.Material as Material
+import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
+import qualified Codec.GlTF.Mesh as Mesh
+import qualified Codec.GlTF.Node as Node
+import qualified Codec.GlTF.Sampler as Sampler
+import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Data.HashMap.Strict as HashMap
 
 attributePosition :: Text
@@ -49,33 +50,36 @@ adaptGltf gltf@GlTF.GlTF{..} buffers' = Gltf
       gltfMaterials = adaptMaterials materials,
       gltfMeshes = adaptMeshes gltf buffers' meshes,
       gltfNodes = adaptNodes nodes,
-      gltfSamplers = [],
+      gltfSamplers = adaptSamplers samplers,
       gltfTextures = []
     }
 
-adaptAsset :: GlTF.Asset.Asset -> Asset
-adaptAsset GlTF.Asset.Asset{..} = Asset
+adaptAsset :: Asset.Asset -> Asset
+adaptAsset Asset.Asset{..} = Asset
   { assetVersion = version,
     assetCopyright = copyright,
     assetGenerator = generator,
     assetMinVersion = minVersion
   }
 
-adaptMaterials :: Maybe (Vector GlTF.Material.Material) -> Vector Material
+adaptMaterials :: Maybe (Vector Material.Material) -> Vector Material
 adaptMaterials = maybe mempty (fmap adaptMaterial)
 
 adaptMeshes
   :: GlTF.GlTF
   -> Vector GltfBuffer
-  -> Maybe (Vector GlTF.Mesh.Mesh)
+  -> Maybe (Vector Mesh.Mesh)
   -> Vector Mesh
 adaptMeshes gltf buffers' = maybe mempty (fmap $ adaptMesh gltf buffers')
 
-adaptNodes :: Maybe (Vector GlTF.Node.Node) -> Vector Node
+adaptNodes :: Maybe (Vector Node.Node) -> Vector Node
 adaptNodes = maybe mempty (fmap adaptNode)
 
-adaptMaterial :: GlTF.Material.Material -> Material
-adaptMaterial GlTF.Material.Material{..} = Material
+adaptSamplers :: Maybe (Vector Sampler.Sampler) -> Vector Sampler
+adaptSamplers = maybe mempty (fmap adaptSampler)
+
+adaptMaterial :: Material.Material -> Material
+adaptMaterial Material.Material{..} = Material
   { materialAlphaCutoff = alphaCutoff,
     materialAlphaMode = adaptAlphaMode alphaMode,
     materialDoubleSided = doubleSided,
@@ -87,17 +91,17 @@ adaptMaterial GlTF.Material.Material{..} = Material
 adaptMesh
   :: GlTF.GlTF
   -> Vector GltfBuffer
-  -> GlTF.Mesh.Mesh
+  -> Mesh.Mesh
   -> Mesh
-adaptMesh gltf buffers' GlTF.Mesh.Mesh{..} = Mesh
+adaptMesh gltf buffers' Mesh.Mesh{..} = Mesh
     { meshPrimitives = adaptMeshPrimitives gltf buffers' primitives,
       meshWeights = fromMaybe mempty weights,
       meshName = name
     }
 
-adaptNode :: GlTF.Node.Node -> Node
-adaptNode GlTF.Node.Node{..} = Node
-  { nodeMeshId = GlTF.Mesh.unMeshIx <$> mesh,
+adaptNode :: Node.Node -> Node
+adaptNode Node.Node{..} = Node
+  { nodeMeshId = Mesh.unMeshIx <$> mesh,
     nodeName = name,
     nodeRotation = toV4 <$> rotation,
     nodeScale = toV3 <$> scale,
@@ -105,17 +109,26 @@ adaptNode GlTF.Node.Node{..} = Node
     nodeWeights = maybe [] toList weights
   }
 
-adaptAlphaMode :: GlTF.Material.MaterialAlphaMode -> MaterialAlphaMode
-adaptAlphaMode GlTF.Material.BLEND = Blend
-adaptAlphaMode GlTF.Material.MASK = Mask
-adaptAlphaMode GlTF.Material.OPAQUE = Opaque
-adaptAlphaMode (GlTF.Material.MaterialAlphaMode alphaMode)
+adaptSampler :: Sampler.Sampler -> Sampler
+adaptSampler Sampler.Sampler{..} = Sampler
+  { samplerMagFilter = adaptMagFilter <$> magFilter,
+    samplerMinFilter = adaptMinFilter <$> minFilter,
+    samplerName = name,
+    samplerWrapS = adaptSamplerWrap wrapS,
+    samplerWrapT = adaptSamplerWrap wrapT
+  }
+
+adaptAlphaMode :: Material.MaterialAlphaMode -> MaterialAlphaMode
+adaptAlphaMode Material.BLEND = Blend
+adaptAlphaMode Material.MASK = Mask
+adaptAlphaMode Material.OPAQUE = Opaque
+adaptAlphaMode (Material.MaterialAlphaMode alphaMode)
   = error $ "Invalid MaterialAlphaMode: " <> show alphaMode
 
 adaptPbrMetallicRoughness
-  :: GlTF.PbrMetallicRoughness.PbrMetallicRoughness
+  :: PbrMetallicRoughness.PbrMetallicRoughness
   -> PbrMetallicRoughness
-adaptPbrMetallicRoughness GlTF.PbrMetallicRoughness.PbrMetallicRoughness{..}
+adaptPbrMetallicRoughness PbrMetallicRoughness.PbrMetallicRoughness{..}
   = PbrMetallicRoughness
     { pbrBaseColorFactor = toV4 baseColorFactor,
       pbrBaseColorTexture = adaptTextureInfo <$> baseColorTexture,
@@ -126,12 +139,32 @@ adaptPbrMetallicRoughness GlTF.PbrMetallicRoughness.PbrMetallicRoughness{..}
 adaptMeshPrimitives
   :: GlTF.GlTF
   -> Vector GltfBuffer
-  -> Vector GlTF.Mesh.MeshPrimitive
+  -> Vector Mesh.MeshPrimitive
   -> Vector MeshPrimitive
 adaptMeshPrimitives gltf = fmap . adaptMeshPrimitive gltf
 
-adaptTextureInfo :: GlTF.TextureInfo.TextureInfo a -> TextureInfo
-adaptTextureInfo GlTF.TextureInfo.TextureInfo{..} = TextureInfo
+adaptMagFilter :: Sampler.SamplerMagFilter -> MagFilter
+adaptMagFilter Sampler.MAG_LINEAR = MagLinear
+adaptMagFilter Sampler.MAG_NEAREST = MagNearest
+adaptMagFilter mode = error $ "Invalid MagFilter: " <> show mode
+
+adaptMinFilter :: Sampler.SamplerMinFilter -> MinFilter
+adaptMinFilter Sampler.MIN_NEAREST = MinNearest
+adaptMinFilter Sampler.MIN_LINEAR = MinLinear
+adaptMinFilter Sampler.MIN_NEAREST_MIPMAP_NEAREST = MinNearestMipmapNearest
+adaptMinFilter Sampler.MIN_NEAREST_MIPMAP_LINEAR = MinNearestMipmapLinear
+adaptMinFilter Sampler.MIN_LINEAR_MIPMAP_NEAREST = MinLinearMipmapNearest
+adaptMinFilter Sampler.MIN_LINEAR_MIPMAP_LINEAR = MinLinearMipmapLinear
+adaptMinFilter mode = error $ "Invalid MinFilter: " <> show mode
+
+adaptSamplerWrap :: Sampler.SamplerWrap -> SamplerWrap
+adaptSamplerWrap Sampler.CLAMP_TO_EDGE = ClampToEdge
+adaptSamplerWrap Sampler.MIRRORED_REPEAT = MirroredRepeat
+adaptSamplerWrap Sampler.REPEAT = Repeat
+adaptSamplerWrap mode = error $ "Invalid SamplerWrap: " <> show mode
+
+adaptTextureInfo :: TextureInfo.TextureInfo a -> TextureInfo
+adaptTextureInfo TextureInfo.TextureInfo{..} = TextureInfo
   { textureId = index,
     textureTexCoord = texCoord
   }
@@ -139,11 +172,11 @@ adaptTextureInfo GlTF.TextureInfo.TextureInfo{..} = TextureInfo
 adaptMeshPrimitive
   :: GlTF.GlTF
   -> Vector GltfBuffer
-  -> GlTF.Mesh.MeshPrimitive
+  -> Mesh.MeshPrimitive
   -> MeshPrimitive
-adaptMeshPrimitive gltf buffers' GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
+adaptMeshPrimitive gltf buffers' Mesh.MeshPrimitive{..} = MeshPrimitive
     { meshPrimitiveIndices = maybe mempty (vertexIndices gltf buffers') indices,
-      meshPrimitiveMaterial = GlTF.Material.unMaterialIx <$> material,
+      meshPrimitiveMaterial = Material.unMaterialIx <$> material,
       meshPrimitiveMode = adaptMeshPrimitiveMode mode,
       meshPrimitiveNormals = maybe mempty (vertexNormals gltf buffers') normals,
       meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
@@ -154,8 +187,8 @@ adaptMeshPrimitive gltf buffers' GlTF.Mesh.MeshPrimitive{..} = MeshPrimitive
           texCoords = attributes HashMap.!? attributeTexCoord
           
 
-adaptMeshPrimitiveMode :: GlTF.Mesh.MeshPrimitiveMode -> MeshPrimitiveMode
-adaptMeshPrimitiveMode = toEnum . GlTF.Mesh.unMeshPrimitiveMode
+adaptMeshPrimitiveMode :: Mesh.MeshPrimitiveMode -> MeshPrimitiveMode
+adaptMeshPrimitiveMode = toEnum . Mesh.unMeshPrimitiveMode
 
 toV3 :: (a, a, a) -> V3 a
 toV3 (x, y, z) = V3 x y z

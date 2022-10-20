@@ -1,5 +1,4 @@
 module Text.GLTF.Loader.AdapterSpec (spec) where
-
 import Text.GLTF.Loader.Adapter
 import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
@@ -170,7 +169,7 @@ loaderGltf = Gltf
     gltfMaterials = [loaderMaterial],
     gltfMeshes = [loaderMesh],
     gltfNodes = [loaderNode],
-    gltfSamplers = [],
+    gltfSamplers = [loaderSampler],
     gltfTextures = []
   }
 
@@ -207,6 +206,15 @@ loaderNode = Node
     nodeScale = Just $ V3 5 6 7,
     nodeTranslation = Just $ V3 8 9 10,
     nodeWeights = [11, 12, 13]
+  }
+
+loaderSampler :: Sampler
+loaderSampler = Sampler
+  {  samplerMagFilter = Just MagLinear,
+     samplerMinFilter = Just MinLinear,
+     samplerName = Just "Sampler",
+     samplerWrapS = ClampToEdge,
+     samplerWrapT = Repeat
   }
 
 loaderPbrMetallicRoughness :: PbrMetallicRoughness

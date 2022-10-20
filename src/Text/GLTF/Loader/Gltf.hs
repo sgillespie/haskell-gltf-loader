@@ -3,6 +3,8 @@ module Text.GLTF.Loader.Gltf
     Gltf(..),
     Asset(..),
     Image(..),
+    MagFilter(..),
+    MinFilter(..),
     Material(..),
     MaterialAlphaMode(..),
     Mesh(..),
@@ -11,6 +13,7 @@ module Text.GLTF.Loader.Gltf
     PbrMetallicRoughness(..),
     MeshPrimitiveMode(..),
     Sampler(..),
+    SamplerWrap(..),
     Texture(..),
     TextureInfo(..),
     -- * Lenses

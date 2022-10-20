@@ -162,7 +162,15 @@ spec = do
                       }
                   ],
 
-              gltfSamplers = [],
+              gltfSamplers
+                = [ Sampler
+                      { samplerMagFilter = Just MagLinear,
+                        samplerMinFilter = Just MinLinearMipmapLinear,
+                        samplerName = Nothing,
+                        samplerWrapS = Repeat,
+                        samplerWrapT = Repeat
+                      }
+                  ],
               gltfTextures = []
             }
       
