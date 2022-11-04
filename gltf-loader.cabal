@@ -35,6 +35,7 @@ library
       Text.GLTF.Loader.Decoders
       Text.GLTF.Loader.Errors
       Text.GLTF.Loader.Gltf
+      Text.GLTF.Loader.MonadAdapter
   other-modules:
       Paths_gltf_loader
   hs-source-dirs:

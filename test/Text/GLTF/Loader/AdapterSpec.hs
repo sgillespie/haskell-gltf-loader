@@ -2,6 +2,7 @@ module Text.GLTF.Loader.AdapterSpec (spec) where
 import Text.GLTF.Loader.Adapter
 import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
+import Text.GLTF.Loader.MonadAdapter
 import Text.GLTF.Loader.Test.MkGltf
 
 import Linear
@@ -19,11 +20,17 @@ spec = do
   let codecGltf = mkCodecGltf
       codecMeshPrimitive = mkCodecMeshPrimitive
 
-  describe "adaptGltf" $ do
-    it "Adapts a basic GlTF" $ do
+  describe "runAdapter" $ do
+    it "Runs a basic GlTF adapter" $ do
       buffers' <- buffers
       images' <- images
-      adaptGltf codecGltf buffers' images' `shouldBe` loaderGltf
+      
+      runAdapter codecGltf buffers' images' `shouldBe` loaderGltf
+
+  describe "adaptGltf" $ do
+    it "Adapts a basic GlTF" $ do
+      env' <- env
+      runReader adaptGltf env' `shouldBe` loaderGltf
 
   describe "adaptAsset" $ do
     let codecAsset = mkCodecAsset
@@ -36,18 +43,18 @@ spec = do
         codecMesh' = mkCodecMesh { Mesh.weights = Just [3.1] }
     
     it "Adapts a list of nodes" $ do
-      buffers' <- buffers
+      env' <- env
       
       let meshes = Just [codecMesh, codecMesh']
           adaptedMeshes = [loaderMesh, set _meshWeights [3.1] loaderMesh]
 
-      adaptMeshes codecGltf buffers' meshes `shouldBe` adaptedMeshes
+      runReader (adaptMeshes meshes) env' `shouldBe` adaptedMeshes
 
     it "Adapts empty meshes" $ do
-      buffers' <- buffers
+      env' <- env
       
-      adaptMeshes codecGltf buffers' (Just []) `shouldBe` []
-      adaptMeshes codecGltf buffers' Nothing `shouldBe` []
+      runReader (adaptMeshes (Just [])) env' `shouldBe` []
+      runReader (adaptMeshes Nothing) env' `shouldBe` []
 
   describe "adaptMaterials" $ do
     let materials = Just [mkCodecMaterial]
@@ -87,10 +94,10 @@ spec = do
             }
     
     it "Adapts a BufferView image" $ do
-      buffers' <- buffers
+      env' <- env
       let image = ImageBufferView (BufferView.BufferViewIx 4)
       
-      adaptImage codecGltf buffers' codecImage image `shouldBe`
+      runReader (adaptImage image codecImage) env' `shouldBe`
         Image
           { imageData = Just "imageData",
             imageMimeType = "text/jpg",
@@ -98,14 +105,15 @@ spec = do
           }
 
     it "Adapts a URI image" $ do
-      buffers' <- buffers
+      env' <- env
+      
       let image = ImageData "imageData"
           codecImage' = codecImage
             { Image.uri = Just $ URI.URI "",
               Image.bufferView = Nothing
             }
 
-      adaptImage codecGltf buffers' codecImage' image `shouldBe`
+      runReader (adaptImage image codecImage') env' `shouldBe`
         Image
           { imageData = Just "imageData",
             imageMimeType = "text/jpg",
@@ -119,15 +127,15 @@ spec = do
         codecMesh'' = mkCodecMesh { Mesh.weights = Just [] }
     
     it "Adapts a basic mesh" $ do
-      buffers' <- buffers
-      adaptMesh codecGltf buffers' codecMesh `shouldBe` loaderMesh
+      env' <- env
+      runReader (adaptMesh codecMesh) env' `shouldBe` loaderMesh
 
     it "Adapts empty weights" $ do
-      buffers' <- buffers
+      env' <- env
       let meshEmptyWeight = set _meshWeights [] loaderMesh
       
-      adaptMesh codecGltf buffers' codecMesh' `shouldBe` meshEmptyWeight
-      adaptMesh codecGltf buffers' codecMesh'' `shouldBe` meshEmptyWeight
+      runReader (adaptMesh codecMesh') env' `shouldBe` meshEmptyWeight
+      runReader (adaptMesh codecMesh'') env' `shouldBe` meshEmptyWeight
   
   describe "adaptNode" $ do
     let codecNode = mkCodecNode
@@ -155,37 +163,37 @@ spec = do
           { Mesh.mode = Mesh.MeshPrimitiveMode 0 }
   
     it "adapts a list of primitives" $ do
-      buffers' <- buffers
+      env' <- env
       let primitives = [codecMeshPrimitive, codecMeshPrimitive']
           expectedResult
             = [ loaderMeshPrimitive,
                 set _meshPrimitiveMode Points loaderMeshPrimitive
               ]
       
-      adaptMeshPrimitives codecGltf buffers' primitives `shouldBe` expectedResult
+      runReader (adaptMeshPrimitives primitives) env' `shouldBe` expectedResult
 
   describe "adaptMeshPrimitive" $ do
     it "adapts a basic primitive" $ do
-      buffers' <- buffers
-      adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive `shouldBe` loaderMeshPrimitive
+      env' <- env
+      runReader (adaptMeshPrimitive codecMeshPrimitive) env' `shouldBe` loaderMeshPrimitive
 
     it "ignores indices when unspecified" $ do
-      buffers' <- buffers
+      env' <- env
       
       let codecMeshPrimitive' = mkCodecMeshPrimitive
             { Mesh.indices = Nothing }
           loaderMeshPrimitive' = loaderMeshPrimitive & _meshPrimitiveIndices .~ []
 
-      adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive' `shouldBe` loaderMeshPrimitive'
+      runReader (adaptMeshPrimitive codecMeshPrimitive') env' `shouldBe` loaderMeshPrimitive'
 
     it "ignores material when unspecified" $ do
-      buffers' <- buffers
+      env' <- env
 
       let codecMeshPrimitive' = mkCodecMeshPrimitive
             { Mesh.material = Nothing }
           loaderMeshPrimitive' = loaderMeshPrimitive & _meshPrimitiveMaterial .~ Nothing
 
-      adaptMeshPrimitive codecGltf buffers' codecMeshPrimitive'
+      runReader (adaptMeshPrimitive codecMeshPrimitive') env'
         `shouldBe` loaderMeshPrimitive'
       
     
@@ -206,6 +214,9 @@ buffers = loadBuffers mkCodecGltf
 
 images :: MonadUnliftIO io => io (Vector GltfImageData)
 images = loadImages mkCodecGltf
+
+env :: MonadUnliftIO io => io AdaptEnv
+env = AdaptEnv mkCodecGltf <$> buffers <*> images
 
 loaderGltf :: Gltf
 loaderGltf = Gltf

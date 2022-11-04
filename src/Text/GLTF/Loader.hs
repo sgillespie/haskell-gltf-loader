@@ -33,4 +33,4 @@ toGltfResult res
   = res
     & over _Left (ReadError . fromString)
     & traverseOf _Right toGltfResult'
-   where toGltfResult' gltf = adaptGltf gltf <$> loadBuffers gltf <*> loadImages gltf
+   where toGltfResult' gltf = runAdapter gltf <$> loadBuffers gltf <*> loadImages gltf

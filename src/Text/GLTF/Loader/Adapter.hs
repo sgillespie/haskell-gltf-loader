@@ -3,6 +3,7 @@ module Text.GLTF.Loader.Adapter
   ( attributePosition,
     attributeNormal,
     attributeTexCoord,
+    runAdapter,
     adaptGltf,
     adaptAsset,
     adaptImages,
@@ -22,6 +23,7 @@ module Text.GLTF.Loader.Adapter
 
 import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
+import Text.GLTF.Loader.MonadAdapter
 
 import Linear (V3(..), V4(..))
 import RIO
@@ -48,12 +50,26 @@ attributeNormal = "NORMAL"
 attributeTexCoord :: Text
 attributeTexCoord = "TEXCOORD_0"
 
-adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Vector GltfImageData -> Gltf
-adaptGltf gltf@GlTF.GlTF{..} buffers' images' = Gltf
+runAdapter
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> Vector GltfImageData
+  -> Gltf
+runAdapter gltf buffers images = runReader adaptGltf env
+  where env = AdaptEnv gltf buffers images
+
+adaptGltf :: Adapter Gltf
+adaptGltf = do
+  GlTF.GlTF{..} <- getGltf
+
+  gltfImages <- adaptImages images
+  gltfMeshes <- adaptMeshes meshes
+  
+  return $ Gltf
     { gltfAsset = adaptAsset asset,
-      gltfImages = adaptImages gltf buffers' images' images,
+      gltfImages = gltfImages,
       gltfMaterials = adaptMaterials materials,
-      gltfMeshes = adaptMeshes gltf buffers' meshes,
+      gltfMeshes = gltfMeshes,
       gltfNodes = adaptNodes nodes,
       gltfSamplers = adaptSamplers samplers,
       gltfTextures = []
@@ -67,24 +83,21 @@ adaptAsset Asset.Asset{..} = Asset
     assetMinVersion = minVersion
   }
 
-adaptImages
-  :: GlTF.GlTF
-  -> Vector GltfBuffer
-  -> Vector GltfImageData
-  -> Maybe (Vector Image.Image)
-  -> Vector Image
-adaptImages gltf buffers' images = maybe mempty $ V.imap adaptImage'
-  where adaptImage' imgId image = adaptImage gltf buffers' image (images ! imgId)
+adaptImages :: Maybe (Vector Image.Image) -> Adapter (Vector Image)
+adaptImages codecImages = do
+  imageData <- getImages
+
+  let images' = fromMaybe mempty codecImages
+      iforM = flip V.imapM
+
+  iforM images' $ \imgId img ->
+    adaptImage (imageData ! imgId) img
 
 adaptMaterials :: Maybe (Vector Material.Material) -> Vector Material
 adaptMaterials = maybe mempty (fmap adaptMaterial)
 
-adaptMeshes
-  :: GlTF.GlTF
-  -> Vector GltfBuffer
-  -> Maybe (Vector Mesh.Mesh)
-  -> Vector Mesh
-adaptMeshes gltf buffers' = maybe mempty (fmap $ adaptMesh gltf buffers')
+adaptMeshes :: Maybe (Vector Mesh.Mesh) -> Adapter (Vector Mesh)
+adaptMeshes = maybe (return mempty) (V.mapM adaptMesh)
 
 adaptNodes :: Maybe (Vector Node.Node) -> Vector Node
 adaptNodes = maybe mempty (fmap adaptNode)
@@ -93,30 +106,31 @@ adaptSamplers :: Maybe (Vector Sampler.Sampler) -> Vector Sampler
 adaptSamplers = maybe mempty (fmap adaptSampler)
 
 adaptImage
-  :: GlTF.GlTF
-  -> Vector GltfBuffer
+  :: GltfImageData
   -> Image.Image
-  -> GltfImageData
-  -> Image
-adaptImage _ _ Image.Image{..} (ImageData payload)
-  = Image
+  -> Adapter Image
+adaptImage (ImageData payload) Image.Image{..}
+  = return Image
       { imageData = Just payload,
         imageMimeType = mimeType',
         imageName = name
       }
   where mimeType' = fromMaybe undefined mimeType
 
-adaptImage gltf buffers' Image.Image{..} (ImageBufferView id')
-  = Image
+adaptImage (ImageBufferView id') Image.Image{..} = do
+  gltf <- getGltf
+  buffers' <- getBuffers
+  
+  let mimeType' = fromMaybe undefined mimeType
+      payload = imageDataRaw gltf buffers' id'
+  
+  return Image
       { imageData = payload,
         imageMimeType = mimeType',
         imageName = name
       }
-  where mimeType' = fromMaybe undefined mimeType
-        payload = imageDataRaw gltf buffers' id'
-        
 
-adaptImage _ _ _ _ = undefined
+adaptImage _ _ = undefined
 
 adaptMaterial :: Material.Material -> Material
 adaptMaterial Material.Material{..} = Material
@@ -128,13 +142,12 @@ adaptMaterial Material.Material{..} = Material
     materialPbrMetallicRoughness = adaptPbrMetallicRoughness <$> pbrMetallicRoughness
   }
 
-adaptMesh
-  :: GlTF.GlTF
-  -> Vector GltfBuffer
-  -> Mesh.Mesh
-  -> Mesh
-adaptMesh gltf buffers' Mesh.Mesh{..} = Mesh
-    { meshPrimitives = adaptMeshPrimitives gltf buffers' primitives,
+adaptMesh :: Mesh.Mesh -> Adapter Mesh
+adaptMesh Mesh.Mesh{..} = do
+  primitives' <- adaptMeshPrimitives primitives
+  
+  return $ Mesh
+    { meshPrimitives = primitives',
       meshWeights = fromMaybe mempty weights,
       meshName = name
     }
@@ -176,12 +189,8 @@ adaptPbrMetallicRoughness PbrMetallicRoughness.PbrMetallicRoughness{..}
       pbrRoughnessFactor = roughnessFactor
     }
 
-adaptMeshPrimitives
-  :: GlTF.GlTF
-  -> Vector GltfBuffer
-  -> Vector Mesh.MeshPrimitive
-  -> Vector MeshPrimitive
-adaptMeshPrimitives gltf = fmap . adaptMeshPrimitive gltf
+adaptMeshPrimitives :: Vector Mesh.MeshPrimitive -> Adapter (Vector MeshPrimitive)
+adaptMeshPrimitives = V.mapM adaptMeshPrimitive
 
 adaptMagFilter :: Sampler.SamplerMagFilter -> MagFilter
 adaptMagFilter Sampler.MAG_LINEAR = MagLinear
@@ -209,12 +218,12 @@ adaptTextureInfo TextureInfo.TextureInfo{..} = TextureInfo
     textureTexCoord = texCoord
   }
 
-adaptMeshPrimitive
-  :: GlTF.GlTF
-  -> Vector GltfBuffer
-  -> Mesh.MeshPrimitive
-  -> MeshPrimitive
-adaptMeshPrimitive gltf buffers' Mesh.MeshPrimitive{..} = MeshPrimitive
+adaptMeshPrimitive :: Mesh.MeshPrimitive -> Adapter MeshPrimitive
+adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
+  gltf <- getGltf
+  buffers' <- getBuffers
+  
+  return $ MeshPrimitive
     { meshPrimitiveIndices = maybe mempty (vertexIndices gltf buffers') indices,
       meshPrimitiveMaterial = Material.unMaterialIx <$> material,
       meshPrimitiveMode = adaptMeshPrimitiveMode mode,
