@@ -9,12 +9,14 @@ import Data.ByteString.Base64 (encodeBase64)
 import Data.ByteString.Lazy (toStrict)
 import Foreign (Storable(..))
 import Linear
-import RIO
+import RIO hiding (length)
+import RIO.Text (length)
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Accessor as Accessor
 import qualified Codec.GlTF.Asset as Asset
 import qualified Codec.GlTF.Buffer as Buffer
 import qualified Codec.GlTF.BufferView as BufferView
+import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
@@ -40,16 +42,18 @@ mkCodecGltf = GlTF.GlTF
       [ mkCodecBufferIndices,
         mkCodecBufferPositions,
         mkCodecBufferNormals,
-        mkCodecBufferTexCoords
+        mkCodecBufferTexCoords,
+        mkCodecBufferImage
       ],
     bufferViews = Just
       [ mkCodecBufferViewIndices,
         mkCodecBufferViewPositions,
         mkCodecBufferViewNormals,
-        mkCodecBufferViewTexCoords
+        mkCodecBufferViewTexCoords,
+        mkCodecBufferViewImage
       ],
     cameras = Nothing,
-    images = Nothing,
+    images = Just [mkCodecImage],
     materials = Just [mkCodecMaterial],
     meshes = Just [mkCodecMesh],
     nodes = Just [mkCodecNode],
@@ -187,6 +191,28 @@ mkCodecBufferViewTexCoords = BufferView.BufferView
     extras = Nothing
   }
 
+mkCodecBufferViewImage :: BufferView.BufferView
+mkCodecBufferViewImage = BufferView.BufferView
+  { buffer = Buffer.BufferIx 4,
+    byteOffset = 0,
+    byteLength = length "imageData" * 4,
+    byteStride = Nothing,
+    target = Nothing,
+    name = Just "BufferView Image",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
+mkCodecImage :: Image.Image
+mkCodecImage = Image.Image
+  { uri = Just (URI.URI "data:image/jpg;base64,aW1hZ2VQYXlsb2Fk"),
+    mimeType = Just "image/png",
+    bufferView = Just $ BufferView.BufferViewIx 4,
+    name = Just "Image",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
 mkCodecBufferIndices :: Buffer.Buffer
 mkCodecBufferIndices = Buffer.Buffer
   { byteLength = sizeOf (undefined :: Word16) * 4,
@@ -221,6 +247,15 @@ mkCodecBufferTexCoords = Buffer.Buffer
     extensions = Nothing,
     extras = Nothing,
     name = Just "Buffer Positions"
+  }
+
+mkCodecBufferImage :: Buffer.Buffer
+mkCodecBufferImage = Buffer.Buffer
+  { byteLength = length "imageData" * 4,
+    uri = Just mkCodecBufferUriImage,
+    extensions = Nothing,
+    extras = Nothing,
+    name = Just "Buffer Image"
   }
 
 mkCodecMaterial :: Material.Material
@@ -281,6 +316,11 @@ mkCodecBufferUriTexCoords = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
         encodedText = encodeBase64. toStrict . runPut $ putPositions
         putPositions = mapM_ (replicateM_ 2 . putFloatle) ([9..12] :: [Float])
+
+mkCodecBufferUriImage :: URI.URI
+mkCodecBufferUriImage = URI.URI uriText
+  where uriText = "data:application/octet-stream;base64," <> encodedText
+        encodedText = encodeBase64 . toStrict $ "imageData"
 
 mkCodecMeshPrimitive :: Mesh.MeshPrimitive
 mkCodecMeshPrimitive = Mesh.MeshPrimitive

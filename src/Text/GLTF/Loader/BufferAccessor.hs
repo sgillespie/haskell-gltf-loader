@@ -1,12 +1,15 @@
 module Text.GLTF.Loader.BufferAccessor
   ( GltfBuffer(..),
+    GltfImageData(..),
     -- * Loading GLTF buffers
     loadBuffers,
+    loadImages,
     -- * Deserializing Accessors
     vertexIndices,
     vertexPositions,
     vertexNormals,
     vertexTexCoords,
+    imageDataRaw,
   ) where
 
 import Text.GLTF.Loader.Decoders
@@ -14,6 +17,7 @@ import Text.GLTF.Loader.Decoders
 import Codec.GlTF.Accessor
 import Codec.GlTF.Buffer
 import Codec.GlTF.BufferView
+import Codec.GlTF.Image
 import Codec.GlTF.URI
 import Codec.GlTF
 import Data.Binary.Get
@@ -28,6 +32,12 @@ import qualified RIO.ByteString as ByteString
 newtype GltfBuffer = GltfBuffer { unBuffer :: ByteString }
   deriving (Eq, Show)
 
+data GltfImageData
+  = ImageData ByteString
+  | ImageBufferView BufferViewIx
+  | NoImageData
+  deriving (Eq, Show)
+
 -- | A buffer and some metadata
 data BufferAccessor = BufferAccessor
   { offset :: Int,
@@ -40,18 +50,16 @@ loadBuffers :: MonadUnliftIO io => GlTF -> io (Vector GltfBuffer)
 loadBuffers GlTF{buffers=buffers} = do
   let buffers' = fromMaybe [] buffers
 
-  Vector.forM buffers' $ \Buffer{..} -> do
-    payload <-
-      maybe
-      (return "")
-      (\uri' -> do
-          readRes <- liftIO $ loadURI undefined uri'
-          case readRes of
-            Left err -> error err
-            Right res -> return res)
-      uri
-    
-    return $ GltfBuffer payload
+  Vector.forM buffers' $ \Buffer{..} ->
+    GltfBuffer <$> maybe (return mempty) loadUri' uri
+
+loadImages :: MonadUnliftIO io => GlTF -> io (Vector GltfImageData)
+loadImages GlTF{images=images} = do
+  let images' = fromMaybe [] images
+
+  Vector.forM images' $ \Image{..} ->
+    let fallbackImageData = return $ maybe NoImageData ImageBufferView bufferView
+    in maybe fallbackImageData (fmap ImageData . loadUri') uri
 
 -- | Decode vertex indices
 vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word16
@@ -68,6 +76,26 @@ vertexNormals = readBufferWithGet getNormals
 -- | Decode texture coordinates. Note that we only use the first one.
 vertexTexCoords :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V2 Float)
 vertexTexCoords = readBufferWithGet getTexCoords
+
+-- | Read an image from a buffer view
+imageDataRaw :: GlTF -> Vector GltfBuffer -> BufferViewIx -> Maybe ByteString
+imageDataRaw = readBufferView
+
+-- | Return a buffer view undecoded
+readBufferView :: GlTF -> Vector GltfBuffer -> BufferViewIx -> Maybe ByteString
+readBufferView gltf buffers' bufferViewId = do
+  accessor@BufferAccessor{count=length'}
+    <- bufferViewAccessor gltf buffers' bufferViewId
+
+  return $ readFromBufferRaw accessor length'
+
+-- | Read a URI. Throws error on failure
+loadUri' :: MonadUnliftIO io => URI -> io ByteString
+loadUri' uri' = do
+  readRes <- liftIO $ loadURI undefined uri'
+  case readRes of
+    Left err -> error err
+    Right res -> return res
 
 -- | Decode a buffer using the given Binary decoder
 readBufferWithGet
@@ -102,6 +130,24 @@ bufferAccessor GlTF{..} buffers' accessorId = do
       buffer = buffer
     }
 
+-- | Look up a Buffer from a GlTF and BufferView
+bufferViewAccessor
+  :: GlTF
+  -> Vector GltfBuffer
+  -> BufferViewIx
+  -> Maybe BufferAccessor
+bufferViewAccessor GlTF{..} buffers' bufferViewId = do
+  bufferView <- lookupBufferView bufferViewId =<< bufferViews
+  buffer <- lookupBufferFromBufferView bufferView buffers'
+
+  let BufferView{byteLength=length', byteOffset=offset'} = bufferView
+
+  return $ BufferAccessor
+    { offset = offset',
+      count = length',
+      buffer = buffer
+    }
+
 -- | Look up a BufferView by Accessor
 lookupBufferViewFromAccessor :: Accessor -> Vector BufferView -> Maybe BufferView
 lookupBufferViewFromAccessor Accessor{..} bufferViews
@@ -130,7 +176,12 @@ readFromBuffer
   -> Get (Vector storable)
   -> BufferAccessor
   -> Vector storable
-readFromBuffer storable getter BufferAccessor{..}
-  = runGet getter (fromStrict payload')
-  where payload' = ByteString.take len' . ByteString.drop offset . unBuffer $ buffer
+readFromBuffer storable getter accessor@BufferAccessor{..}
+  = runGet getter . fromStrict $ payload
+  where payload = readFromBufferRaw accessor len'
         len' = count * sizeOf storable
+
+-- | Read from buffer without decoding
+readFromBufferRaw :: BufferAccessor -> Int -> ByteString
+readFromBufferRaw BufferAccessor{..} len'
+  = ByteString.take len' . ByteString.drop offset . unBuffer $ buffer

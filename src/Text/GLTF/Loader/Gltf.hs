@@ -107,7 +107,7 @@ data Asset = Asset
 -- | Image data used to create a texture.
 data Image = Image
   { -- | The binary data of the image
-    imageData :: ByteString,
+    imageData :: Maybe ByteString,
     -- | The image’s media type.
     imageMimeType :: Text,
     -- | The user-defined name of this object.
@@ -315,7 +315,7 @@ _assetMinVersion = lens
   (\asset minVersion' -> asset { assetMinVersion = minVersion' })
 
 -- | The binary data of the image
-_imageData :: Lens' Image ByteString
+_imageData :: Lens' Image (Maybe ByteString)
 _imageData = lens imageData (\img data' -> img { imageData = data' })
 
 -- | The image’s media type.

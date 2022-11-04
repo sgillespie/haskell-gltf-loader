@@ -7,9 +7,12 @@ import Text.GLTF.Loader.Test.MkGltf
 import Linear
 import RIO
 import Test.Hspec
+import qualified Codec.GlTF.BufferView as BufferView
+import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
+import qualified Codec.GlTF.URI as URI
 
 spec :: Spec
 spec = do
@@ -19,7 +22,8 @@ spec = do
   describe "adaptGltf" $ do
     it "Adapts a basic GlTF" $ do
       buffers' <- buffers
-      adaptGltf codecGltf buffers' `shouldBe` loaderGltf
+      images' <- images
+      adaptGltf codecGltf buffers' images' `shouldBe` loaderGltf
 
   describe "adaptAsset" $ do
     let codecAsset = mkCodecAsset
@@ -70,6 +74,44 @@ spec = do
     it "Adapts empty nodes" $ do
       adaptNodes (Just []) `shouldBe` []
       adaptNodes Nothing `shouldBe` []
+
+  describe "adaptImage" $ do
+    let codecImage = Image.Image
+            { uri = Nothing,
+              mimeType = Just "text/jpg",
+              bufferView = Just $ BufferView.BufferViewIx 4,
+              name = Just "Image",
+              extensions = Nothing,
+              extras = Nothing
+              
+            }
+    
+    it "Adapts a BufferView image" $ do
+      buffers' <- buffers
+      let image = ImageBufferView (BufferView.BufferViewIx 4)
+      
+      adaptImage codecGltf buffers' codecImage image `shouldBe`
+        Image
+          { imageData = Just "imageData",
+            imageMimeType = "text/jpg",
+            imageName = Just "Image"
+          }
+
+    it "Adapts a URI image" $ do
+      buffers' <- buffers
+      let image = ImageData "imageData"
+          codecImage' = codecImage
+            { Image.uri = Just $ URI.URI "",
+              Image.bufferView = Nothing
+            }
+
+      adaptImage codecGltf buffers' codecImage' image `shouldBe`
+        Image
+          { imageData = Just "imageData",
+            imageMimeType = "text/jpg",
+            imageName = Just "Image"
+          }
+      
 
   describe "adaptMesh" $ do
     let codecMesh = mkCodecMesh
@@ -162,10 +204,13 @@ spec = do
 buffers :: MonadUnliftIO io => io (Vector GltfBuffer)
 buffers = loadBuffers mkCodecGltf
 
+images :: MonadUnliftIO io => io (Vector GltfImageData)
+images = loadImages mkCodecGltf
+
 loaderGltf :: Gltf
 loaderGltf = Gltf
   { gltfAsset = loaderAsset,
-    gltfImages = [],
+    gltfImages = [loaderImage],
     gltfMaterials = [loaderMaterial],
     gltfMeshes = [loaderMesh],
     gltfNodes = [loaderNode],
@@ -179,6 +224,13 @@ loaderAsset = Asset
     assetCopyright = Just "copyright",
     assetGenerator = Just "generator",
     assetMinVersion = Just "minVersion"
+  }
+
+loaderImage :: Image
+loaderImage = Image
+  { imageData = Just "imagePayload",
+    imageMimeType = "image/png",
+    imageName = Just "Image"
   }
 
 loaderMaterial :: Material

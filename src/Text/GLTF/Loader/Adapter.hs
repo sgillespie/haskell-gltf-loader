@@ -5,9 +5,11 @@ module Text.GLTF.Loader.Adapter
     attributeTexCoord,
     adaptGltf,
     adaptAsset,
+    adaptImages,
     adaptMaterials,
     adaptMeshes,
     adaptNodes,
+    adaptImage,
     adaptMaterial,
     adaptMesh,
     adaptNode,
@@ -24,8 +26,10 @@ import Text.GLTF.Loader.Gltf
 import Linear (V3(..), V4(..))
 import RIO
 import RIO.Partial (toEnum)
+import RIO.Vector.Partial ((!))
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as Asset
+import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Mesh as Mesh
@@ -33,6 +37,7 @@ import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.Sampler as Sampler
 import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Data.HashMap.Strict as HashMap
+import qualified RIO.Vector as V
 
 attributePosition :: Text
 attributePosition = "POSITION"
@@ -43,10 +48,10 @@ attributeNormal = "NORMAL"
 attributeTexCoord :: Text
 attributeTexCoord = "TEXCOORD_0"
 
-adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Gltf
-adaptGltf gltf@GlTF.GlTF{..} buffers' = Gltf
+adaptGltf :: GlTF.GlTF -> Vector GltfBuffer -> Vector GltfImageData -> Gltf
+adaptGltf gltf@GlTF.GlTF{..} buffers' images' = Gltf
     { gltfAsset = adaptAsset asset,
-      gltfImages = [],
+      gltfImages = adaptImages gltf buffers' images' images,
       gltfMaterials = adaptMaterials materials,
       gltfMeshes = adaptMeshes gltf buffers' meshes,
       gltfNodes = adaptNodes nodes,
@@ -61,6 +66,15 @@ adaptAsset Asset.Asset{..} = Asset
     assetGenerator = generator,
     assetMinVersion = minVersion
   }
+
+adaptImages
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> Vector GltfImageData
+  -> Maybe (Vector Image.Image)
+  -> Vector Image
+adaptImages gltf buffers' images = maybe mempty $ V.imap adaptImage'
+  where adaptImage' imgId image = adaptImage gltf buffers' image (images ! imgId)
 
 adaptMaterials :: Maybe (Vector Material.Material) -> Vector Material
 adaptMaterials = maybe mempty (fmap adaptMaterial)
@@ -77,6 +91,32 @@ adaptNodes = maybe mempty (fmap adaptNode)
 
 adaptSamplers :: Maybe (Vector Sampler.Sampler) -> Vector Sampler
 adaptSamplers = maybe mempty (fmap adaptSampler)
+
+adaptImage
+  :: GlTF.GlTF
+  -> Vector GltfBuffer
+  -> Image.Image
+  -> GltfImageData
+  -> Image
+adaptImage _ _ Image.Image{..} (ImageData payload)
+  = Image
+      { imageData = Just payload,
+        imageMimeType = mimeType',
+        imageName = name
+      }
+  where mimeType' = fromMaybe undefined mimeType
+
+adaptImage gltf buffers' Image.Image{..} (ImageBufferView id')
+  = Image
+      { imageData = payload,
+        imageMimeType = mimeType',
+        imageName = name
+      }
+  where mimeType' = fromMaybe undefined mimeType
+        payload = imageDataRaw gltf buffers' id'
+        
+
+adaptImage _ _ _ _ = undefined
 
 adaptMaterial :: Material.Material -> Material
 adaptMaterial Material.Material{..} = Material

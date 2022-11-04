@@ -16,6 +16,7 @@ import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Accessor as Accessor
 import qualified Codec.GlTF.Buffer as Buffer
 import qualified Codec.GlTF.BufferView as BufferView
+import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.URI as URI
 
 spec :: Spec
@@ -44,6 +45,41 @@ spec = do
       buffers <- loadBuffers gltf'
 
       buffers `shouldBe` []
+
+  describe "loadImages" $ do
+    it "Reads image URIs from GlTF" $ do
+      images <- loadImages gltf
+      images `shouldBe` [ImageData "imagePayload"]
+
+    it "Reads image BufferViews from GlTF" $ do
+      let gltf' = gltf
+            { GlTF.images = Just
+                [ mkCodecImage { Image.uri = Nothing } ]
+            }
+      
+      images <- loadImages gltf'
+      images `shouldBe` [ImageBufferView (BufferView.BufferViewIx 4)]
+
+    it "Returns NoImage when no data specificed" $ do
+      let gltf' = gltf
+            { GlTF.images = Just
+                [ mkCodecImage
+                    { Image.uri = Nothing,
+                      Image.bufferView = Nothing
+                    }
+                ]
+            }
+      
+      images <- loadImages gltf'
+      images `shouldBe` [NoImageData]
+
+    it "Handles malformed URIs" $ do
+      let gltf' = gltf
+            { GlTF.images = Just
+                [mkCodecImage { Image.uri = Just (URI.URI "Uh oh!") }]
+            }
+
+      loadImages gltf' `shouldThrow` anyException
   
   describe "vertexIndices" $ do
     it "Reads basic values from buffer" $ do
