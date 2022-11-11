@@ -119,8 +119,16 @@ spec = do
             imageMimeType = "text/jpg",
             imageName = Just "Image"
           }
-      
 
+    it "Fails when mimeType is Nothing" $ do
+      env' <- env
+
+      let image = ImageData "imageData"
+          codecImage' = codecImage { Image.mimeType = Nothing }
+
+      -- evaluate (error "") `shouldThrow` anyErrorCall
+      evaluate (runReader (adaptImage image codecImage') env') `shouldThrow` anyErrorCall
+      
   describe "adaptMesh" $ do
     let codecMesh = mkCodecMesh
         codecMesh' = mkCodecMesh { Mesh.weights = Nothing }

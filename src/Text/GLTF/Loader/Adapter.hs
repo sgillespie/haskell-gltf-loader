@@ -105,32 +105,20 @@ adaptNodes = maybe mempty (fmap adaptNode)
 adaptSamplers :: Maybe (Vector Sampler.Sampler) -> Vector Sampler
 adaptSamplers = maybe mempty (fmap adaptSampler)
 
-adaptImage
-  :: GltfImageData
-  -> Image.Image
-  -> Adapter Image
-adaptImage (ImageData payload) Image.Image{..}
-  = return Image
-      { imageData = Just payload,
-        imageMimeType = mimeType',
-        imageName = name
-      }
-  where mimeType' = fromMaybe undefined mimeType
+adaptImage :: GltfImageData -> Image.Image -> Adapter Image
+adaptImage imgData Image.Image{..} = do
+  payload <- getImageData imgData
 
-adaptImage (ImageBufferView id') Image.Image{..} = do
-  gltf <- getGltf
-  buffers' <- getBuffers
-  
-  let mimeType' = fromMaybe undefined mimeType
-      payload = imageDataRaw gltf buffers' id'
-  
-  return Image
+  -- Note that we treat mimeType as required, even though it may not be in the
+  -- specification. Tests in Blender suggest it's ALWAYS provided; When we come
+  -- across an example where it isn't, we'll address it then.
+  case mimeType of
+    Nothing -> error "Invalid Image: no mime-type specified"
+    Just mimeType' -> return Image
       { imageData = payload,
         imageMimeType = mimeType',
         imageName = name
       }
-
-adaptImage _ _ = undefined
 
 adaptMaterial :: Material.Material -> Material
 adaptMaterial Material.Material{..} = Material
@@ -170,6 +158,12 @@ adaptSampler Sampler.Sampler{..} = Sampler
     samplerWrapS = adaptSamplerWrap wrapS,
     samplerWrapT = adaptSamplerWrap wrapT
   }
+
+getImageData :: GltfImageData -> Adapter (Maybe ByteString)
+getImageData (ImageData payload) = return $ Just payload
+getImageData NoImageData = return Nothing
+getImageData (ImageBufferView bufferViewId) = imageDataRaw' <$> getGltf <*> getBuffers
+  where imageDataRaw' gltf buffers' = imageDataRaw gltf buffers' bufferViewId
 
 adaptAlphaMode :: Material.MaterialAlphaMode -> MaterialAlphaMode
 adaptAlphaMode Material.BLEND = Blend
