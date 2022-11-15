@@ -13,6 +13,7 @@ import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
+import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.URI as URI
 
 spec :: Spec
@@ -158,6 +159,22 @@ spec = do
       adaptNode codecNode' `shouldBe` nodeEmptyWeight
       adaptNode codecNode'' `shouldBe` nodeEmptyWeight
 
+  describe "adaptTexture" $ do
+    it "Adapts simple textures" $ do
+      adaptTexture mkCodecTexture `shouldBe` loaderTexture
+
+    it "Returns Nothing fields unchanged" $ do
+      let texture = mkCodecTexture
+            { Texture.sampler = Nothing,
+              Texture.source = Nothing
+            }
+
+          expectedResult = loaderTexture
+            & _textureSamplerId .~ Nothing
+            & _textureSourceId .~ Nothing
+
+      adaptTexture texture `shouldBe` expectedResult
+
   describe "adaptAlphaMode" $ do
     it "Adapts all expected modes" $ do
       adaptAlphaMode Material.BLEND `shouldBe` Blend
@@ -234,7 +251,7 @@ loaderGltf = Gltf
     gltfMeshes = [loaderMesh],
     gltfNodes = [loaderNode],
     gltfSamplers = [loaderSampler],
-    gltfTextures = []
+    gltfTextures = [loaderTexture]
   }
 
 loaderAsset :: Asset
@@ -281,11 +298,18 @@ loaderNode = Node
 
 loaderSampler :: Sampler
 loaderSampler = Sampler
-  {  samplerMagFilter = Just MagLinear,
-     samplerMinFilter = Just MinLinear,
-     samplerName = Just "Sampler",
-     samplerWrapS = ClampToEdge,
-     samplerWrapT = Repeat
+  { samplerMagFilter = Just MagLinear,
+    samplerMinFilter = Just MinLinear,
+    samplerName = Just "Sampler",
+    samplerWrapS = ClampToEdge,
+    samplerWrapT = Repeat
+  }
+
+loaderTexture :: Texture
+loaderTexture = Texture
+  { textureName = Just "Texture",
+    textureSamplerId = Just 0,
+    textureSourceId = Just 0
   }
 
 loaderPbrMetallicRoughness :: PbrMetallicRoughness

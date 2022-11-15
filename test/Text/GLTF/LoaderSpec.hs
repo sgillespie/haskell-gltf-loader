@@ -38,7 +38,7 @@ spec = do
       gltf' ^? _meshes `shouldBe` Just expectedMeshes
       gltf' ^? _nodes `shouldBe` Just expectedNodes
       gltf' ^? _samplers `shouldBe` Just expectedSamplers
-      gltf' ^? _textures `shouldBe` Just []
+      gltf' ^? _textures `shouldBe` Just expectedTextures
 
 expectedAsset :: Asset
 expectedAsset = Asset
@@ -185,5 +185,14 @@ expectedSamplers
         samplerName = Nothing,
         samplerWrapS = Repeat,
         samplerWrapT = Repeat
+      }
+    ]
+
+expectedTextures :: Vector Texture
+expectedTextures
+  = [ Texture
+      { textureName = Nothing,
+        textureSamplerId = Just 0,
+        textureSourceId = Just 0
       }
     ]

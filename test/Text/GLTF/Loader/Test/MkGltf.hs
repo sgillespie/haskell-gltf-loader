@@ -22,6 +22,7 @@ import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.Sampler as Sampler
+import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Codec.GlTF.URI as URI
 import qualified Data.HashMap.Strict as HashMap
@@ -60,7 +61,7 @@ mkCodecGltf = GlTF.GlTF
     samplers = Just [mkCodecSampler],
     scenes = Nothing,
     skins = Nothing,
-    textures = Nothing,
+    textures = Just [mkCodecTexture],
     extensions = Nothing,
     extras = Nothing
   }
@@ -371,4 +372,13 @@ mkCodecSampler = Sampler.Sampler
     name = Just "Sampler",
     wrapS = Sampler.CLAMP_TO_EDGE,
     wrapT = Sampler.REPEAT
+  }
+
+mkCodecTexture :: Texture.Texture
+mkCodecTexture = Texture.Texture
+  { sampler = Just (Sampler.SamplerIx 0),
+    source = Just (Image.ImageIx 0),
+    name = Just "Texture",
+    extensions = Nothing,
+    extras = Nothing
   }

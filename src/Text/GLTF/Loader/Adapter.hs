@@ -10,10 +10,12 @@ module Text.GLTF.Loader.Adapter
     adaptMaterials,
     adaptMeshes,
     adaptNodes,
+    adaptTextures,
     adaptImage,
     adaptMaterial,
     adaptMesh,
     adaptNode,
+    adaptTexture,
     adaptAlphaMode,
     adaptPbrMetallicRoughness,
     adaptMeshPrimitives,
@@ -37,6 +39,7 @@ import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.Sampler as Sampler
+import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Data.HashMap.Strict as HashMap
 import qualified RIO.Vector as V
@@ -72,7 +75,7 @@ adaptGltf = do
       gltfMeshes = gltfMeshes,
       gltfNodes = adaptNodes nodes,
       gltfSamplers = adaptSamplers samplers,
-      gltfTextures = []
+      gltfTextures = adaptTextures textures
     }
 
 adaptAsset :: Asset.Asset -> Asset
@@ -104,6 +107,9 @@ adaptNodes = maybe mempty (fmap adaptNode)
 
 adaptSamplers :: Maybe (Vector Sampler.Sampler) -> Vector Sampler
 adaptSamplers = maybe mempty (fmap adaptSampler)
+
+adaptTextures :: Maybe (Vector Texture.Texture) -> Vector Texture
+adaptTextures = maybe mempty (fmap adaptTexture)
 
 adaptImage :: GltfImageData -> Image.Image -> Adapter Image
 adaptImage imgData Image.Image{..} = do
@@ -157,6 +163,13 @@ adaptSampler Sampler.Sampler{..} = Sampler
     samplerName = name,
     samplerWrapS = adaptSamplerWrap wrapS,
     samplerWrapT = adaptSamplerWrap wrapT
+  }
+
+adaptTexture :: Texture.Texture -> Texture
+adaptTexture Texture.Texture{..} = Texture
+  { textureName = name,
+    textureSamplerId = Sampler.unSamplerIx <$> sampler,
+    textureSourceId = Image.unImageIx <$> source
   }
 
 getImageData :: GltfImageData -> Adapter (Maybe ByteString)
