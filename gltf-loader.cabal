@@ -20,6 +20,9 @@ build-type:     Simple
 extra-source-files:
     README.md
     data/big-cube.gltf
+    data/cube-separate.bin
+    data/cube-separate.gltf
+    data/cube.glb
     data/cube.gltf
     data/invalid.gltf
 

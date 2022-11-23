@@ -21,12 +21,17 @@ spec = do
       res `shouldSatisfy` has (_Left . _ReadError)
 
   describe "fromFile" $ do
-    it "Parses embedded gltf file" $ do
-      gltf <- fromFile "data/cube.gltf"
+    describe "Gltf embedded" $ gltfFromFileTests "data/cube.gltf"
+    describe "Gltf separate" $ gltfFromFileTests "data/cube-separate.gltf"
+
+gltfFromFileTests :: FilePath -> Spec
+gltfFromFileTests file = do
+  it "Parses embedded gltf file" $ do
+      gltf <- fromFile file
       gltf `shouldSatisfy` has _Right
 
-    it "Parses expected nodes" $ do
-      gltf <- fromFile "data/cube.gltf"
+  it "Parses expected nodes" $ do
+      gltf <- fromFile file
 
       let gltf' = gltf ^?! _Right
 

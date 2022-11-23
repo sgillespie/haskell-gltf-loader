@@ -18,19 +18,26 @@ import Text.GLTF.Loader.Gltf
 import Data.Either
 import Lens.Micro
 import RIO
+import RIO.FilePath (takeDirectory)
 import qualified Codec.GlTF as GlTF
 
 -- | Load a glTF scene from a ByteString
 fromByteString :: MonadUnliftIO io => ByteString -> io (Either Errors Gltf)
-fromByteString =  toGltfResult . GlTF.fromByteString
+fromByteString input = toGltfResult "." (GlTF.fromByteString input)
 
 -- | Load a glTF scene from a file
 fromFile :: MonadUnliftIO io => FilePath -> io (Either Errors Gltf)
-fromFile path = liftIO (GlTF.fromFile path) >>= toGltfResult
-  
-toGltfResult :: MonadUnliftIO io => Either String GlTF.GlTF -> io (Either Errors Gltf)
-toGltfResult res
-  = res
-    & over _Left (ReadError . fromString)
-    & traverseOf _Right toGltfResult'
-   where toGltfResult' gltf = runAdapter gltf <$> loadBuffers gltf <*> loadImages gltf
+fromFile path = liftIO (GlTF.fromFile path) >>= toGltfResult (takeDirectory path)
+
+toGltfResult
+  :: MonadUnliftIO io
+  => FilePath
+  -> Either String GlTF.GlTF
+  -> io (Either Errors Gltf)
+toGltfResult basePath res = res
+  & over _Left (ReadError . fromString)
+  & traverseOf _Right toGltfResult'
+  where toGltfResult' gltf
+          = runAdapter gltf
+          <$> loadBuffers gltf basePath
+          <*> loadImages gltf basePath

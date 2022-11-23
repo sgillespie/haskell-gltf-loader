@@ -25,6 +25,7 @@ import Data.ByteString.Lazy (fromStrict)
 import Foreign.Storable
 import Linear
 import RIO hiding (min, max)
+import RIO.FilePath
 import qualified RIO.Vector as Vector
 import qualified RIO.ByteString as ByteString
 
@@ -46,20 +47,29 @@ data BufferAccessor = BufferAccessor
   }
 
 -- | Read all the buffers into memory
-loadBuffers :: MonadUnliftIO io => GlTF -> io (Vector GltfBuffer)
-loadBuffers GlTF{buffers=buffers} = do
+loadBuffers
+  :: MonadUnliftIO io
+  => GlTF
+  -> FilePath -- ^ Base path of GlTF file
+  -> io (Vector GltfBuffer)
+loadBuffers GlTF{buffers=buffers} basePath = do
   let buffers' = fromMaybe [] buffers
 
-  Vector.forM buffers' $ \Buffer{..} ->
-    GltfBuffer <$> maybe (return mempty) loadUri' uri
+  Vector.forM buffers' $ \Buffer{..} -> do
+    uri' <- maybe (return mempty) (loadUri' basePath) uri
+    return $ GltfBuffer uri'
 
-loadImages :: MonadUnliftIO io => GlTF -> io (Vector GltfImageData)
-loadImages GlTF{images=images} = do
+loadImages
+  :: MonadUnliftIO io
+  => GlTF
+  -> FilePath -- ^ Base path of GlTF file
+  -> io (Vector GltfImageData)
+loadImages GlTF{images=images} basePath = do
   let images' = fromMaybe [] images
 
-  Vector.forM images' $ \Image{..} ->
+  Vector.forM images' $ \Image{..} -> do
     let fallbackImageData = return $ maybe NoImageData ImageBufferView bufferView
-    in maybe fallbackImageData (fmap ImageData . loadUri') uri
+    maybe fallbackImageData (fmap ImageData . loadUri' basePath) uri
 
 -- | Decode vertex indices
 vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word16
@@ -90,12 +100,22 @@ readBufferView gltf buffers' bufferViewId = do
   return $ readFromBufferRaw accessor length'
 
 -- | Read a URI. Throws error on failure
-loadUri' :: MonadUnliftIO io => URI -> io ByteString
-loadUri' uri' = do
-  readRes <- liftIO $ loadURI undefined uri'
+loadUri'
+  :: MonadUnliftIO io
+  => FilePath -- ^ Base path
+  -> URI      -- ^ URI to load
+  -> io ByteString
+loadUri' baseDir uri' = do
+  readRes <- liftIO $ loadURI (loadFile baseDir) uri'
   case readRes of
     Left err -> error err
     Right res -> return res
+
+loadFile :: MonadUnliftIO io => FilePath -> FilePath -> io (Either String ByteString)
+loadFile baseDir filename = do
+  contents <- readFileBinary (baseDir </> filename)
+
+  return $ Right contents
 
 -- | Decode a buffer using the given Binary decoder
 readBufferWithGet

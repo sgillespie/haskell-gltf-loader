@@ -22,10 +22,11 @@ import qualified Codec.GlTF.URI as URI
 spec :: Spec
 spec = do
   let gltf = mkCodecGltf
+      basePath = "."
   
   describe "loadBuffers" $ do
     it "Reads buffers from GlTF" $ do
-      buffers <- loadBuffers gltf
+      buffers <- loadBuffers gltf basePath
       
       let (GltfBuffer buffer') = buffers ! 0
           values = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict $ buffer'
@@ -38,17 +39,17 @@ spec = do
                 [ mkCodecBufferIndices { Buffer.uri = Just $ URI.URI "uh oh!" } ]
             }
 
-      loadBuffers gltf' `shouldThrow` anyException
+      loadBuffers gltf' basePath `shouldThrow` anyException
 
     it "Handles no buffer" $ do
       let gltf' = gltf { GlTF.buffers = Nothing }
-      buffers <- loadBuffers gltf'
+      buffers <- loadBuffers gltf' basePath
 
       buffers `shouldBe` []
 
   describe "loadImages" $ do
     it "Reads image URIs from GlTF" $ do
-      images <- loadImages gltf
+      images <- loadImages gltf basePath
       images `shouldBe` [ImageData "imagePayload"]
 
     it "Reads image BufferViews from GlTF" $ do
@@ -57,7 +58,7 @@ spec = do
                 [ mkCodecImage { Image.uri = Nothing } ]
             }
       
-      images <- loadImages gltf'
+      images <- loadImages gltf' basePath
       images `shouldBe` [ImageBufferView (BufferView.BufferViewIx 4)]
 
     it "Returns NoImage when no data specificed" $ do
@@ -70,7 +71,7 @@ spec = do
                 ]
             }
       
-      images <- loadImages gltf'
+      images <- loadImages gltf' basePath
       images `shouldBe` [NoImageData]
 
     it "Handles malformed URIs" $ do
@@ -79,7 +80,7 @@ spec = do
                 [mkCodecImage { Image.uri = Just (URI.URI "Uh oh!") }]
             }
 
-      loadImages gltf' `shouldThrow` anyException
+      loadImages gltf' basePath `shouldThrow` anyException
   
   describe "vertexIndices" $ do
     it "Reads basic values from buffer" $ do

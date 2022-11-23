@@ -235,10 +235,12 @@ spec = do
         `shouldThrow` anyErrorCall
 
 buffers :: MonadUnliftIO io => io (Vector GltfBuffer)
-buffers = loadBuffers mkCodecGltf
+buffers = loadBuffers mkCodecGltf basePath
+  where basePath = "."
 
 images :: MonadUnliftIO io => io (Vector GltfImageData)
-images = loadImages mkCodecGltf
+images = loadImages mkCodecGltf basePath
+  where basePath = "."
 
 env :: MonadUnliftIO io => io AdaptEnv
 env = AdaptEnv mkCodecGltf <$> buffers <*> images
