@@ -26,7 +26,7 @@ spec = do
   
   describe "loadBuffers" $ do
     it "Reads buffers from GlTF" $ do
-      buffers <- loadBuffers gltf basePath
+      buffers <- loadBuffers gltf Nothing basePath
       
       let (GltfBuffer buffer') = buffers ! 0
           values = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict $ buffer'
@@ -39,11 +39,11 @@ spec = do
                 [ mkCodecBufferIndices { Buffer.uri = Just $ URI.URI "uh oh!" } ]
             }
 
-      loadBuffers gltf' basePath `shouldThrow` anyException
+      loadBuffers gltf' Nothing basePath `shouldThrow` anyException
 
     it "Handles no buffer" $ do
       let gltf' = gltf { GlTF.buffers = Nothing }
-      buffers <- loadBuffers gltf' basePath
+      buffers <- loadBuffers gltf' Nothing basePath
 
       buffers `shouldBe` []
 

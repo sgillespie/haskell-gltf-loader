@@ -14,6 +14,7 @@ module Text.GLTF.Loader.BufferAccessor
 
 import Text.GLTF.Loader.Decoders
 
+import Codec.GLB (Chunk(..))
 import Codec.GlTF.Accessor
 import Codec.GlTF.Buffer
 import Codec.GlTF.BufferView
@@ -28,10 +29,12 @@ import RIO hiding (min, max)
 import RIO.FilePath
 import qualified RIO.Vector as Vector
 import qualified RIO.ByteString as ByteString
+import qualified Codec.GLB as GLB
 
 -- | Holds the entire payload of a glTF buffer
-newtype GltfBuffer = GltfBuffer { unBuffer :: ByteString }
-  deriving (Eq, Show)
+newtype GltfBuffer
+  = GltfBuffer { unBuffer :: ByteString }
+  deriving (Eq, Show, Semigroup, Monoid)
 
 data GltfImageData
   = ImageData ByteString
@@ -50,14 +53,26 @@ data BufferAccessor = BufferAccessor
 loadBuffers
   :: MonadUnliftIO io
   => GlTF
+  -> Maybe Chunk
   -> FilePath -- ^ Base path of GlTF file
   -> io (Vector GltfBuffer)
-loadBuffers GlTF{buffers=buffers} basePath = do
+loadBuffers GlTF{buffers=buffers} chunk basePath = do
   let buffers' = fromMaybe [] buffers
+      iforM = flip Vector.imapM
 
-  Vector.forM buffers' $ \Buffer{..} -> do
-    uri' <- maybe (return mempty) (loadUri' basePath) uri
+      
+  
+  iforM buffers' $ \idx Buffer{..} -> do
+    -- If the first buffer does not have a URI defined, it refers to a GLB chunk
+    let fallback = if idx == 0 && isNothing uri
+          then maybe mempty loadBufferFromChunk chunk
+          else mempty
+    
+    uri' <- maybe (pure fallback) (loadUri' basePath) uri
     return $ GltfBuffer uri'
+
+loadBufferFromChunk :: Chunk -> ByteString
+loadBufferFromChunk Chunk{..} = chunkData
 
 loadImages
   :: MonadUnliftIO io

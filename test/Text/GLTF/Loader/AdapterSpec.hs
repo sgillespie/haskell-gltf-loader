@@ -235,7 +235,7 @@ spec = do
         `shouldThrow` anyErrorCall
 
 buffers :: MonadUnliftIO io => io (Vector GltfBuffer)
-buffers = loadBuffers mkCodecGltf basePath
+buffers = loadBuffers mkCodecGltf Nothing basePath
   where basePath = "."
 
 images :: MonadUnliftIO io => io (Vector GltfImageData)

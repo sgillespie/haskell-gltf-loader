@@ -17,7 +17,7 @@ run = do
       verbose = options ^. _optionsVerbose
 
   logInfo $ "File: " <> fromString file
-  result <- liftIO $ fromFile file
+  result <- liftIO $ fromJsonFile file
 
   either reportError (reporter verbose summary) result
 

@@ -25,6 +25,7 @@ extra-source-files:
     data/cube.glb
     data/cube.gltf
     data/invalid.gltf
+    data/Untitled.png
 
 source-repository head
   type: git
@@ -37,6 +38,7 @@ library
       Text.GLTF.Loader.BufferAccessor
       Text.GLTF.Loader.Decoders
       Text.GLTF.Loader.Errors
+      Text.GLTF.Loader.Glb
       Text.GLTF.Loader.Gltf
       Text.GLTF.Loader.MonadAdapter
   other-modules:

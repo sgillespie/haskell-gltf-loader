@@ -10,22 +10,43 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "fromByteString" $ do
+  describe "fromJsonByteString" $ do
     it "Parses embedded gltf content" $ do
       gltfText <- readFileBinary "data/cube.gltf"
-      res <- fromByteString gltfText
+      res <- fromJsonByteString gltfText
       res `shouldSatisfy` has _Right
 
     it "Fails on invalid content" $ do
-      res <- fromByteString "Invalid GLTF"
+      res <- fromJsonByteString "Invalid GLTF"
       res `shouldSatisfy` has (_Left . _ReadError)
 
-  describe "fromFile" $ do
+  describe "fromJsonFile" $ do
     describe "Gltf embedded" $ gltfFromFileTests "data/cube.gltf"
     describe "Gltf separate" $ gltfFromFileTests "data/cube-separate.gltf"
 
+  describe "fromBinaryBinaryString" $ do
+    it "parses glb content" $ do
+      glb <- readFileBinary "data/cube.glb"
+      res <- fromBinaryByteString glb
+      res `shouldSatisfy` has _Right
+
+  describe "fromBinaryFile" $ do
+    describe "Glb" $ glbFromFileTests "data/cube.glb"
+
 gltfFromFileTests :: FilePath -> Spec
-gltfFromFileTests file = do
+gltfFromFileTests file = fromFileTests file fromJsonFile
+
+glbFromFileTests :: FilePath -> Spec
+glbFromFileTests file = fromFileTests file fromFile
+  where fromFile path = do
+          glb <- fromBinaryFile path
+          pure $ over _Right (^. _gltf) glb
+
+fromFileTests
+  :: FilePath
+  -> (FilePath -> IO (Either Errors Gltf))
+  -> Spec
+fromFileTests file fromFile = do
   it "Parses embedded gltf file" $ do
       gltf <- fromFile file
       gltf `shouldSatisfy` has _Right
