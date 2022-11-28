@@ -4,7 +4,6 @@
 
 > A high level GlTF loader
 
-
 ## Prerequisites
 
 In order to build or install you will need
@@ -57,20 +56,20 @@ This includes a CLI utility to inspect GlTF files
 Currently, only geometries and PBR materials are supported, but we hope to support the
 majority of GlTF features:
 
- - [ ] Animitions
+ - [ ] Animations
  - [x] Asset
  - [ ] Cameras
- - [ ] Images
- - [ ] Materials
+ - [x] Images
+ - [x] Materials
    - [x] PBR Metallic Roughness
-   - [ ] Textures
+   - [x] Textures
  - [x] Meshes
     - [x] Positions
     - [x] Indices
     - [x] Normals
     - [x] Texture Coordinates
  - [x] Nodes
- - [ ] Samplers
+ - [x] Samplers
  - [ ] Skins
 
 ## Authors
