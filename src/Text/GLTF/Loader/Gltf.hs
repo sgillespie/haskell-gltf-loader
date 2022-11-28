@@ -46,6 +46,7 @@ module Text.GLTF.Loader.Gltf
     _meshWeights,
     _meshName,
     -- ** Node Lenses
+    _nodeChildren,
     _nodeMeshId,
     _nodeName,
     _nodeRotation,
@@ -143,7 +144,9 @@ data Mesh = Mesh
 
 -- | A node in the node hierarchy
 data Node = Node
-  { -- | The index of the mesh in this node.
+  { -- | The indices of this Node's children
+    nodeChildren :: Vector Int,
+    -- | The index of the mesh in this node.
     nodeMeshId :: Maybe Int,
     -- | The user-defined name of this object.
     nodeName :: Maybe Text,
@@ -376,6 +379,10 @@ _meshPrimitives = lens
 -- | A Vector of weights to be applied to the morph targets.
 _meshWeights :: Lens' Mesh (Vector Float)
 _meshWeights = lens meshWeights (\mesh weights -> mesh { meshWeights = weights })
+
+-- | The indices of this node's children.
+_nodeChildren :: Lens' Node (Vector Int)
+_nodeChildren = lens nodeChildren (\node children -> node { nodeChildren = children })
 
 -- | The index of the mesh in this node.
 _nodeMeshId :: Lens' Node (Maybe Int)

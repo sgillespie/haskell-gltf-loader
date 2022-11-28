@@ -360,7 +360,7 @@ mkCodecBaseColorTexture = TextureInfo.TextureInfo
 mkCodecNode :: Node.Node
 mkCodecNode = Node.Node
   { camera = Nothing,
-    children = Nothing,
+    children = Just [Node.NodeIx 1],
     skin = Nothing,
     matrix = Nothing,
     mesh = Just (Mesh.MeshIx 5),

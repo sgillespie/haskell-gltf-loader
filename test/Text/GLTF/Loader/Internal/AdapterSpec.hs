@@ -148,17 +148,26 @@ spec = do
       runReader (adaptMesh codecMesh'') env' `shouldBe` meshEmptyWeight
   
   describe "adaptNode" $ do
-    let codecNode = mkCodecNode
-        codecNode' = mkCodecNode { Node.weights = Nothing }
-        codecNode'' = mkCodecNode { Node.weights = Just [] }
-        
     it "Adapts a basic node" $ do
-      adaptNode codecNode `shouldBe` loaderNode
+      adaptNode mkCodecNode `shouldBe` loaderNode
 
     it "Adapts empty weights" $ do
       let nodeEmptyWeight = set _nodeWeights [] loaderNode
-      adaptNode codecNode' `shouldBe` nodeEmptyWeight
-      adaptNode codecNode'' `shouldBe` nodeEmptyWeight
+          codecNodeEmpty = mkCodecNode { Node.weights = Nothing }
+          codecNodeNothing = mkCodecNode { Node.weights = Just [] }
+
+      adaptNode codecNodeNothing `shouldBe` nodeEmptyWeight
+      adaptNode codecNodeEmpty `shouldBe` nodeEmptyWeight
+
+    it "Adapts empty children" $ do
+      let nodeEmptyChildren = set _nodeChildren [] loaderNode
+          codecNodeNothing = mkCodecNode { Node.children = Nothing }
+          codecNodeEmpty = mkCodecNode { Node.children = Just [] }
+
+      adaptNode codecNodeNothing `shouldBe` nodeEmptyChildren
+      adaptNode codecNodeEmpty `shouldBe` nodeEmptyChildren
+
+      
 
   describe "adaptTexture" $ do
     it "Adapts simple textures" $ do
@@ -291,7 +300,8 @@ loaderMesh = Mesh
 
 loaderNode :: Node
 loaderNode = Node
-  { nodeMeshId = Just 5,
+  { nodeChildren = [1],
+    nodeMeshId = Just 5,
     nodeName = Just "node",
     nodeRotation = Just $ V4 1 2 3 4,
     nodeScale = Just $ V3 5 6 7,

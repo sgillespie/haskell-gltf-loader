@@ -194,7 +194,8 @@ expectedMeshes
 expectedNodes :: Vector Node
 expectedNodes =
   [ Node
-    { nodeMeshId = Just 0,
+    { nodeChildren = [],
+      nodeMeshId = Just 0,
       nodeName = Just "Cube",
       nodeRotation = Nothing,
       nodeScale = Nothing,

@@ -148,7 +148,8 @@ adaptMesh Mesh.Mesh{..} = do
 
 adaptNode :: Node.Node -> Node
 adaptNode Node.Node{..} = Node
-  { nodeMeshId = Mesh.unMeshIx <$> mesh,
+  { nodeChildren = maybe mempty (fmap Node.unNodeIx) children,
+    nodeMeshId = Mesh.unMeshIx <$> mesh,
     nodeName = name,
     nodeRotation = toV4 <$> rotation,
     nodeScale = toV3 <$> scale,
