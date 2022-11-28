@@ -5,7 +5,8 @@ import RIO.Process
 
 -- | Command line arguments
 data Options = Options
-  { optionsSummary :: !Bool,
+  { optionsBinary :: !Bool,
+    optionsSummary :: !Bool,
     optionsVerbose :: !Bool,
     optionsFile :: FilePath
   }
@@ -28,6 +29,11 @@ instance HasProcessContext App where
 
 instance HasOptions App where
   optionsL = lens appOptions (\app opts -> app { appOptions = opts })
+
+_optionsBinary :: Lens' Options Bool
+_optionsBinary = lens
+  optionsBinary
+  (\opts bin -> opts { optionsBinary = bin })
 
 _optionsSummary :: Lens' Options Bool
 _optionsSummary = lens

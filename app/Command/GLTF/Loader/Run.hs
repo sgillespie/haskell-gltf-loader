@@ -13,11 +13,15 @@ run :: RIO App ()
 run = do
   options <- asks (^. optionsL)
   let file = options ^. _optionsFile
+      binary = options ^. _optionsBinary
       summary = options ^. _optionsSummary
       verbose = options ^. _optionsVerbose
+      fromFile = if binary
+        then fmap (over _Right (^. _gltf)) . fromBinaryFile
+        else fromJsonFile
 
   logInfo $ "File: " <> fromString file
-  result <- liftIO $ fromJsonFile file
+  result <- liftIO $ fromFile file
 
   either reportError (reporter verbose summary) result
 

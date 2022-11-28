@@ -40,9 +40,15 @@ runApp processContext cliOptions logOptions appAction
 
 options :: Parser Options
 options = Options
-  <$> switch summaryOption
+  <$> switch binaryOption
+  <*> switch summaryOption
   <*> switch verboseOption
   <*> strArgument fileArg
+
+binaryOption :: Mod FlagFields Bool
+binaryOption = long "binary"
+  <> short 'b'
+  <> help "Load file as GLB (Binary glTF)"
 
 summaryOption :: Mod FlagFields Bool
 summaryOption
