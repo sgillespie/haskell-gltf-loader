@@ -1,6 +1,6 @@
 name: gltf-loader
 version: 0.3.0.0
-github: sgillespiep/haskell-gltf-loader
+github: sgillespie/haskell-gltf-loader
 license: MIT             
 author: Sean D Gillespie
 maintainer: sean@mistersg.net
