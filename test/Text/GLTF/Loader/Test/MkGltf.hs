@@ -11,6 +11,7 @@ import Foreign (Storable(..))
 import Linear
 import RIO hiding (length)
 import RIO.Text (length)
+import qualified Codec.GLB as GLB
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Accessor as Accessor
 import qualified Codec.GlTF.Asset as Asset
@@ -297,7 +298,7 @@ mkCodecPbrMetallicRoughness = PbrMetallicRoughness.PbrMetallicRoughness
 mkCodecBufferUriIndices :: URI.URI
 mkCodecBufferUriIndices = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
-        encodedText = encodeBase64. toStrict . toLazyByteString $ putIndices
+        encodedText = encodeBase64 . toStrict . toLazyByteString $ putIndices
         putIndices = foldr ((<>) . putWord16le) empty ([1..4] :: [Word16])
 
 mkCodecBufferUriNormals :: URI.URI
@@ -322,6 +323,15 @@ mkCodecBufferUriImage :: URI.URI
 mkCodecBufferUriImage = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
         encodedText = encodeBase64 . toStrict $ "imageData"
+
+mkCodecBufferChunk :: GLB.Chunk
+mkCodecBufferChunk = GLB.Chunk
+  { chunkLength = fromIntegral $ sizeOf (undefined :: Word16) * 4,
+    chunkType = 0x004E4942,
+    chunkData = binary
+  }
+  where binary = toStrict . toLazyByteString $ putIndices
+        putIndices = foldr ((<>) . putWord16le) empty ([1..4] :: [Word16])
 
 mkCodecMeshPrimitive :: Mesh.MeshPrimitive
 mkCodecMeshPrimitive = Mesh.MeshPrimitive

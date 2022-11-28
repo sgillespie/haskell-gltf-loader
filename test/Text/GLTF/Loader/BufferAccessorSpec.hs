@@ -47,6 +47,37 @@ spec = do
 
       buffers `shouldBe` []
 
+    it "Handles a chunk buffer" $ do
+      let chunk = mkCodecBufferChunk
+      
+          gltf' = gltf
+            { GlTF.buffers = Just
+              [ mkCodecBufferIndices { Buffer.uri = Nothing } ]
+            }
+      buffers <- loadBuffers gltf' (Just chunk) basePath
+      
+      let (GltfBuffer buffer') = buffers ! 0
+          values = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict $ buffer'
+      
+      values `shouldBe` ([1..4] :: Vector Integer)
+      
+    it "Handles chunk + buffers" $ do
+      let chunk = mkCodecBufferChunk
+      
+          gltf' = gltf
+            { GlTF.buffers = Just
+              [ mkCodecBufferIndices { Buffer.uri = Nothing },
+                mkCodecBufferIndices
+              ]
+            }
+      buffers <- loadBuffers gltf' (Just chunk) basePath
+      
+      let getValue = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict
+
+      forM_ buffers $ \buffer -> do
+        let value = getValue . unBuffer $ buffer
+        value `shouldBe` ([1..4] :: Vector Integer)
+
   describe "loadImages" $ do
     it "Reads image URIs from GlTF" $ do
       images <- loadImages gltf basePath

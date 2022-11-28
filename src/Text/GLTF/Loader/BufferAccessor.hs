@@ -29,7 +29,6 @@ import RIO hiding (min, max)
 import RIO.FilePath
 import qualified RIO.Vector as Vector
 import qualified RIO.ByteString as ByteString
-import qualified Codec.GLB as GLB
 
 -- | Holds the entire payload of a glTF buffer
 newtype GltfBuffer
@@ -59,20 +58,15 @@ loadBuffers
 loadBuffers GlTF{buffers=buffers} chunk basePath = do
   let buffers' = fromMaybe [] buffers
       iforM = flip Vector.imapM
-
-      
   
   iforM buffers' $ \idx Buffer{..} -> do
     -- If the first buffer does not have a URI defined, it refers to a GLB chunk
     let fallback = if idx == 0 && isNothing uri
-          then maybe mempty loadBufferFromChunk chunk
+          then maybe mempty chunkData chunk
           else mempty
     
     uri' <- maybe (pure fallback) (loadUri' basePath) uri
     return $ GltfBuffer uri'
-
-loadBufferFromChunk :: Chunk -> ByteString
-loadBufferFromChunk Chunk{..} = chunkData
 
 loadImages
   :: MonadUnliftIO io
