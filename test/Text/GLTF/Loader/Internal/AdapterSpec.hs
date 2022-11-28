@@ -1,8 +1,9 @@
-module Text.GLTF.Loader.AdapterSpec (spec) where
-import Text.GLTF.Loader.Adapter
-import Text.GLTF.Loader.BufferAccessor
+module Text.GLTF.Loader.Internal.AdapterSpec (spec) where
+
 import Text.GLTF.Loader.Gltf
-import Text.GLTF.Loader.MonadAdapter
+import Text.GLTF.Loader.Internal.Adapter
+import Text.GLTF.Loader.Internal.BufferAccessor
+import Text.GLTF.Loader.Internal.MonadAdapter
 import Text.GLTF.Loader.Test.MkGltf
 
 import Linear

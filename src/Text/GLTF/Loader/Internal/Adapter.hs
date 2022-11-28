@@ -1,5 +1,5 @@
 -- |Transform a `Codec.GlTF.GlTF` to `Text.GLTF.Loader.Gltf.Gltf`
-module Text.GLTF.Loader.Adapter
+module Text.GLTF.Loader.Internal.Adapter
   ( attributePosition,
     attributeNormal,
     attributeTexCoord,
@@ -23,9 +23,9 @@ module Text.GLTF.Loader.Adapter
     adaptMeshPrimitiveMode
   ) where
 
-import Text.GLTF.Loader.BufferAccessor
 import Text.GLTF.Loader.Gltf
-import Text.GLTF.Loader.MonadAdapter
+import Text.GLTF.Loader.Internal.BufferAccessor
+import Text.GLTF.Loader.Internal.MonadAdapter
 
 import Linear (V3(..), V4(..))
 import RIO

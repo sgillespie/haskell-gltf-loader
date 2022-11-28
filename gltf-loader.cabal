@@ -34,13 +34,13 @@ source-repository head
 library
   exposed-modules:
       Text.GLTF.Loader
-      Text.GLTF.Loader.Adapter
-      Text.GLTF.Loader.BufferAccessor
-      Text.GLTF.Loader.Decoders
       Text.GLTF.Loader.Errors
       Text.GLTF.Loader.Glb
       Text.GLTF.Loader.Gltf
-      Text.GLTF.Loader.MonadAdapter
+      Text.GLTF.Loader.Internal.Adapter
+      Text.GLTF.Loader.Internal.BufferAccessor
+      Text.GLTF.Loader.Internal.Decoders
+      Text.GLTF.Loader.Internal.MonadAdapter
   other-modules:
       Paths_gltf_loader
   hs-source-dirs:
@@ -160,8 +160,8 @@ test-suite gltf-loader-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Text.GLTF.Loader.AdapterSpec
-      Text.GLTF.Loader.BufferAccessorSpec
+      Text.GLTF.Loader.Internal.AdapterSpec
+      Text.GLTF.Loader.Internal.BufferAccessorSpec
       Text.GLTF.Loader.Test.MkGltf
       Text.GLTF.LoaderSpec
       Paths_gltf_loader

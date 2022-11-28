@@ -13,8 +13,8 @@ module Text.GLTF.Loader
     module Text.GLTF.Loader.Errors
   ) where
 
-import Text.GLTF.Loader.Adapter
-import Text.GLTF.Loader.BufferAccessor
+import Text.GLTF.Loader.Internal.Adapter
+import Text.GLTF.Loader.Internal.BufferAccessor
 import Text.GLTF.Loader.Errors
 import Text.GLTF.Loader.Glb
 import Text.GLTF.Loader.Gltf

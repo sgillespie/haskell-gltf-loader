@@ -1,4 +1,4 @@
-module Text.GLTF.Loader.Decoders
+module Text.GLTF.Loader.Internal.Decoders
   ( -- * GLTF Property-specific Type decoders
     getIndices,
     getPositions,

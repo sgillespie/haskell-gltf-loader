@@ -1,7 +1,7 @@
-module Text.GLTF.Loader.BufferAccessorSpec (spec) where
+module Text.GLTF.Loader.Internal.BufferAccessorSpec (spec) where
 
-import Text.GLTF.Loader.BufferAccessor
-import Text.GLTF.Loader.Decoders
+import Text.GLTF.Loader.Internal.BufferAccessor
+import Text.GLTF.Loader.Internal.Decoders
 import Text.GLTF.Loader.Test.MkGltf
 
 import Linear (V3(..))

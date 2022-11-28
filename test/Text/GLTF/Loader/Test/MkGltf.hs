@@ -1,6 +1,6 @@
 module Text.GLTF.Loader.Test.MkGltf where
 
-import Text.GLTF.Loader.Adapter
+import Text.GLTF.Loader.Internal.Adapter
 
 import Data.Binary.Builder
 import Data.Binary.Put (putFloatle, runPut)

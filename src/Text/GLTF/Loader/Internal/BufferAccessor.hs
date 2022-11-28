@@ -1,4 +1,4 @@
-module Text.GLTF.Loader.BufferAccessor
+module Text.GLTF.Loader.Internal.BufferAccessor
   ( GltfBuffer(..),
     GltfImageData(..),
     -- * Loading GLTF buffers
@@ -12,7 +12,7 @@ module Text.GLTF.Loader.BufferAccessor
     imageDataRaw,
   ) where
 
-import Text.GLTF.Loader.Decoders
+import Text.GLTF.Loader.Internal.Decoders
 
 import Codec.GLB (Chunk(..))
 import Codec.GlTF.Accessor
