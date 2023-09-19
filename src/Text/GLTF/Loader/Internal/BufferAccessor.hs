@@ -9,6 +9,7 @@ module Text.GLTF.Loader.Internal.BufferAccessor
     vertexPositions,
     vertexNormals,
     vertexTexCoords,
+    vertexColors,
     imageDataRaw,
   ) where
 
@@ -95,6 +96,10 @@ vertexNormals = readBufferWithGet getNormals
 -- | Decode texture coordinates. Note that we only use the first one.
 vertexTexCoords :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V2 Float)
 vertexTexCoords = readBufferWithGet getTexCoords
+
+-- | Decode vertex colors
+vertexColors :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V4 Word16)
+vertexColors = readBufferWithGet getColors
 
 -- | Read an image from a buffer view
 imageDataRaw :: GlTF -> Vector GltfBuffer -> BufferViewIx -> Maybe ByteString

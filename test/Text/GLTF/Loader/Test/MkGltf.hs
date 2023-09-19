@@ -2,8 +2,7 @@ module Text.GLTF.Loader.Test.MkGltf where
 
 import Text.GLTF.Loader.Internal.Adapter
 
-import Data.Binary.Builder
-import Data.Binary.Put (putFloatle, runPut)
+import Data.Binary.Put (putFloatle, putWord16le, runPut)
 
 import Data.ByteString.Base64 (encodeBase64)
 import Data.ByteString.Lazy (toStrict)
@@ -37,7 +36,8 @@ mkCodecGltf = GlTF.GlTF
       [ mkCodecAccessorIndices,
         mkCodecAccessorPositions,
         mkCodecAccessorNormals,
-        mkCodecAccessorTexCoords
+        mkCodecAccessorTexCoords,
+        mkCodecAccessorColors
       ],
     animations = Nothing,
     buffers = Just
@@ -45,6 +45,7 @@ mkCodecGltf = GlTF.GlTF
         mkCodecBufferPositions,
         mkCodecBufferNormals,
         mkCodecBufferTexCoords,
+        mkCodecBufferColors,
         mkCodecBufferImage
       ],
     bufferViews = Just
@@ -52,6 +53,7 @@ mkCodecGltf = GlTF.GlTF
         mkCodecBufferViewPositions,
         mkCodecBufferViewNormals,
         mkCodecBufferViewTexCoords,
+        mkCodecBufferViewColors,
         mkCodecBufferViewImage
       ],
     cameras = Nothing,
@@ -145,6 +147,23 @@ mkCodecAccessorTexCoords = Accessor.Accessor
     type' = Accessor.AttributeType "VEC2"
   }
 
+mkCodecAccessorColors :: Accessor.Accessor
+mkCodecAccessorColors = Accessor.Accessor
+  {
+    bufferView = Just $ BufferView.BufferViewIx 4,
+    byteOffset = 0,
+    componentType = Accessor.ComponentType 5123,
+    count = 4,
+    extensions = Nothing,
+    extras = Nothing,
+    max = Nothing,
+    min = Nothing,
+    name = Just "Accessor Vertex Colors",
+    normalized = False,
+    sparse = Nothing,
+    type' = Accessor.AttributeType "VEC3"
+  }
+
 mkCodecBufferViewIndices :: BufferView.BufferView
 mkCodecBufferViewIndices = BufferView.BufferView
   { buffer = Buffer.BufferIx 0,
@@ -193,9 +212,21 @@ mkCodecBufferViewTexCoords = BufferView.BufferView
     extras = Nothing
   }
 
+mkCodecBufferViewColors :: BufferView.BufferView
+mkCodecBufferViewColors = BufferView.BufferView
+  { buffer = Buffer.BufferIx 4,
+    byteOffset = 0,
+    byteLength = sizeOf (undefined :: V4 Float) * 4,
+    byteStride = Nothing,
+    target = Nothing,
+    name = Just "BufferView Colors",
+    extensions = Nothing,
+    extras = Nothing
+  }
+
 mkCodecBufferViewImage :: BufferView.BufferView
 mkCodecBufferViewImage = BufferView.BufferView
-  { buffer = Buffer.BufferIx 4,
+  { buffer = Buffer.BufferIx 5,
     byteOffset = 0,
     byteLength = length "imageData" * 4,
     byteStride = Nothing,
@@ -209,7 +240,7 @@ mkCodecImage :: Image.Image
 mkCodecImage = Image.Image
   { uri = Just (URI.URI "data:image/jpg;base64,aW1hZ2VQYXlsb2Fk"),
     mimeType = Just "image/png",
-    bufferView = Just $ BufferView.BufferViewIx 4,
+    bufferView = Just $ BufferView.BufferViewIx 5,
     name = Just "Image",
     extensions = Nothing,
     extras = Nothing
@@ -249,6 +280,15 @@ mkCodecBufferTexCoords = Buffer.Buffer
     extensions = Nothing,
     extras = Nothing,
     name = Just "Buffer Positions"
+  }
+
+mkCodecBufferColors :: Buffer.Buffer
+mkCodecBufferColors = Buffer.Buffer
+  { byteLength = sizeOf (undefined :: V4 Float) * 4,
+    uri = Just mkCodecBufferUriColors,
+    extensions = Nothing,
+    extras = Nothing,
+    name = Just "Buffer Colors"
   }
 
 mkCodecBufferImage :: Buffer.Buffer
@@ -298,8 +338,8 @@ mkCodecPbrMetallicRoughness = PbrMetallicRoughness.PbrMetallicRoughness
 mkCodecBufferUriIndices :: URI.URI
 mkCodecBufferUriIndices = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
-        encodedText = encodeBase64 . toStrict . toLazyByteString $ putIndices
-        putIndices = foldr ((<>) . putWord16le) empty ([1..4] :: [Word16])
+        encodedText = encodeBase64 . toStrict . runPut $ putIndices
+        putIndices = mapM_ putWord16le ([1..4] :: [Word16])
 
 mkCodecBufferUriNormals :: URI.URI
 mkCodecBufferUriNormals = URI.URI uriText
@@ -319,6 +359,13 @@ mkCodecBufferUriTexCoords = URI.URI uriText
         encodedText = encodeBase64. toStrict . runPut $ putPositions
         putPositions = mapM_ (replicateM_ 2 . putFloatle) ([9..12] :: [Float])
 
+mkCodecBufferUriColors :: URI.URI
+mkCodecBufferUriColors = URI.URI uriText
+  where uriText = "data:application/octet-stream;base64," <> encodedText
+        encodedText = encodeBase64. toStrict . runPut $ putPositions
+        putPositions = mapM_ (replicateM_ 4 . putWord16le . toRatio) ([0, 0.2, 0.6, 1] :: [Float])
+        toRatio w = floor $ w * fromIntegral (maxBound :: Word16)
+
 mkCodecBufferUriImage :: URI.URI
 mkCodecBufferUriImage = URI.URI uriText
   where uriText = "data:application/octet-stream;base64," <> encodedText
@@ -330,8 +377,8 @@ mkCodecBufferChunk = GLB.Chunk
     chunkType = 0x004E4942,
     chunkData = binary
   }
-  where binary = toStrict . toLazyByteString $ putIndices
-        putIndices = foldr ((<>) . putWord16le) empty ([1..4] :: [Word16])
+  where binary = toStrict . runPut $ putIndices
+        putIndices = mapM_ putWord16le ([1..4] :: [Word16])
 
 mkCodecMeshPrimitive :: Mesh.MeshPrimitive
 mkCodecMeshPrimitive = Mesh.MeshPrimitive

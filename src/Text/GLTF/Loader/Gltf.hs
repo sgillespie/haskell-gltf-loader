@@ -69,6 +69,7 @@ module Text.GLTF.Loader.Gltf
     _meshPrimitiveMode,
     _meshPrimitiveNormals,
     _meshPrimitivePositions,
+    _meshPrimitiveColors,
     -- ** PbrMetallicRoughness Lenses
     _pbrBaseColorFactor,
     _pbrBaseColorTexture,
@@ -197,7 +198,9 @@ data MeshPrimitive = MeshPrimitive
     -- | A Vector of vertex positions.
     meshPrimitivePositions :: Vector (V3 Float),
     -- | A Vector of vertex texture coordinates
-    meshPrimitiveTexCoords :: Vector (V2 Float)
+    meshPrimitiveTexCoords :: Vector (V2 Float),
+    -- | A Vector of vertex colors.
+    meshPrimitiveColors :: Vector (V4 Float)
   } deriving (Eq, Show)
 
 -- | Alpha rendering mode of a material
@@ -485,6 +488,12 @@ _meshPrimitivePositions :: Lens' MeshPrimitive (Vector (V3 Float))
 _meshPrimitivePositions = lens
   meshPrimitivePositions
   (\primitive' positions -> primitive' { meshPrimitivePositions = positions })
+
+-- | A Vector of vertex colors.
+_meshPrimitiveColors :: Lens' MeshPrimitive (Vector (V4 Float))
+_meshPrimitiveColors = lens
+  meshPrimitiveColors
+  (\primitive' colors -> primitive' { meshPrimitiveColors = colors })
 
 -- | A Vector of vertex texture coordinates
 _meshPrimitiveTexCoords :: Lens' MeshPrimitive (Vector (V2 Float))

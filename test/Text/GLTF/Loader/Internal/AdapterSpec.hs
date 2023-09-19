@@ -9,6 +9,7 @@ import Text.GLTF.Loader.Test.MkGltf
 import Linear
 import RIO
 import Test.Hspec
+import qualified Codec.GlTF.Accessor as Accessor
 import qualified Codec.GlTF.BufferView as BufferView
 import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
@@ -16,6 +17,7 @@ import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.URI as URI
+import qualified Data.HashMap.Strict as HashMap
 
 spec :: Spec
 spec = do
@@ -97,7 +99,7 @@ spec = do
     
     it "Adapts a BufferView image" $ do
       env' <- env
-      let image = ImageBufferView (BufferView.BufferViewIx 4)
+      let image = ImageBufferView (BufferView.BufferViewIx 5)
       
       runReader (adaptImage image codecImage) env' `shouldBe`
         Image
@@ -230,6 +232,20 @@ spec = do
 
       runReader (adaptMeshPrimitive codecMeshPrimitive') env'
         `shouldBe` loaderMeshPrimitive'
+
+    it "adapts vertex colors" $ do
+      env' <- env
+      
+      let codecMeshPrimitive' = mkCodecMeshPrimitive
+            { Mesh.attributes =
+                HashMap.insert
+                  attributeColors
+                  (Accessor.AccessorIx 4)
+                  (Mesh.attributes mkCodecMeshPrimitive)
+            }
+          loaderMeshPrimitive' = loaderMeshPrimitive & _meshPrimitiveColors .~ [0, 0.2, 0.6, 1]
+
+      runReader (adaptMeshPrimitive codecMeshPrimitive') env' `shouldBe` loaderMeshPrimitive'
       
     
   describe "adaptMeshPrimitiveMode" $
@@ -340,7 +356,8 @@ loaderMeshPrimitive = MeshPrimitive
     meshPrimitiveMode = Triangles,
     meshPrimitiveNormals = fmap (\x -> V3 x x x) [5..8],
     meshPrimitivePositions = fmap (\x -> V3 x x x) [1..4],
-    meshPrimitiveTexCoords = fmap (\x -> V2 x x) [9..12]
+    meshPrimitiveTexCoords = fmap (\x -> V2 x x) [9..12],
+    meshPrimitiveColors = []
   }
 
 loaderBaseColorTexture :: TextureInfo

@@ -3,6 +3,7 @@ module Text.GLTF.Loader.Internal.Adapter
   ( attributePosition,
     attributeNormal,
     attributeTexCoord,
+    attributeColors,
     runAdapter,
     adaptGltf,
     adaptAsset,
@@ -52,6 +53,9 @@ attributeNormal = "NORMAL"
 
 attributeTexCoord :: Text
 attributeTexCoord = "TEXCOORD_0"
+
+attributeColors :: Text
+attributeColors = "COLOR_0"
 
 runAdapter
   :: GlTF.GlTF
@@ -237,11 +241,16 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
       meshPrimitiveMode = adaptMeshPrimitiveMode mode,
       meshPrimitiveNormals = maybe mempty (vertexNormals gltf buffers') normals,
       meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
-      meshPrimitiveTexCoords = maybe mempty (vertexTexCoords gltf buffers') texCoords
+      meshPrimitiveTexCoords = maybe mempty (vertexTexCoords gltf buffers') texCoords,
+      meshPrimitiveColors =
+        maybe mempty (fmap (mapV4 toRatio) . vertexColors gltf buffers') colors
     }
     where positions = attributes HashMap.!? attributePosition
           normals = attributes HashMap.!? attributeNormal
           texCoords = attributes HashMap.!? attributeTexCoord
+          colors = attributes HashMap.!? attributeColors
+          toRatio w = fromIntegral w / fromIntegral (maxBound :: Word16)
+          mapV4 f (V4 w x y z) = V4 (f w) (f x) (f y) (f z)
           
 
 adaptMeshPrimitiveMode :: Mesh.MeshPrimitiveMode -> MeshPrimitiveMode

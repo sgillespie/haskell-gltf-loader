@@ -183,7 +183,8 @@ expectedMeshes
                           V2 0.375 1.0,
                           V2 0.125 0.25,
                           V2 0.375 0.0
-                        ]
+                        ],
+                    meshPrimitiveColors = []
                   }
               ],
           meshWeights = [],

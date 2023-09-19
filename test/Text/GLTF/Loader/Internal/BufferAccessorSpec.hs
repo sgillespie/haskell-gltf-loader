@@ -90,7 +90,7 @@ spec = do
             }
       
       images <- loadImages gltf' basePath
-      images `shouldBe` [ImageBufferView (BufferView.BufferViewIx 4)]
+      images `shouldBe` [ImageBufferView (BufferView.BufferViewIx 5)]
 
     it "Returns NoImage when no data specificed" $ do
       let gltf' = gltf

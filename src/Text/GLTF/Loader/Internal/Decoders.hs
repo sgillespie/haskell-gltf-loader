@@ -4,6 +4,7 @@ module Text.GLTF.Loader.Internal.Decoders
     getPositions,
     getNormals,
     getTexCoords,
+    getColors,
     -- * GLTF Accessor Type decoders
     getScalar,
     getVec2,
@@ -41,6 +42,10 @@ getNormals = getVec3 getFloat
 -- | Texture coordinates binary decoder
 getTexCoords :: Get (Vector (V2 Float))
 getTexCoords = getVec2 getFloat
+
+-- | Vertex colors binary decoder
+getColors :: Get (Vector (V4 Word16))
+getColors = getVec4 getUnsignedShort
 
 -- | Scalar (simple) type binary decoder
 getScalar :: Get a -> Get (Vector a)

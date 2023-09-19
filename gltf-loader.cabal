@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -9,8 +9,8 @@ version:        0.3.0.0
 synopsis:       High level GlTF loader
 description:    Please see the README on Github at <https://github.com/sgillespie/haskell-gltf-loader#readme>
 category:       Graphics
-homepage:       https://github.com/sgillespiep/haskell-gltf-loader#readme
-bug-reports:    https://github.com/sgillespiep/haskell-gltf-loader/issues
+homepage:       https://github.com/sgillespie/haskell-gltf-loader#readme
+bug-reports:    https://github.com/sgillespie/haskell-gltf-loader/issues
 author:         Sean D Gillespie
 maintainer:     sean@mistersg.net
 copyright:      2022 Sean Gillespie
@@ -20,6 +20,7 @@ build-type:     Simple
 extra-source-files:
     README.md
     data/big-cube.gltf
+    data/cube-colored.gltf
     data/cube-separate.bin
     data/cube-separate.gltf
     data/cube.glb
@@ -29,7 +30,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/sgillespiep/haskell-gltf-loader
+  location: https://github.com/sgillespie/haskell-gltf-loader
 
 library
   exposed-modules:
