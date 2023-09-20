@@ -6,8 +6,10 @@ import Text.GLTF.Loader
 import Lens.Micro
 import Lens.Micro.Platform ()
 import Linear (V3(..), V4(..))
+import Numeric
 import RIO
 import qualified RIO.Vector.Boxed as Vector
+import qualified RIO.Text as Text
 
 run :: RIO App ()
 run = do
@@ -46,7 +48,7 @@ reportVerbose gltf = do
 reportSummary :: Gltf -> RIO App ()
 reportSummary gltf = do
   reportAsset $ gltf ^. _asset
-  
+
   logInfo "" -- Blank line
 
   reportNodes gltf reportMeshSummary
@@ -54,7 +56,7 @@ reportSummary gltf = do
 reportGltf :: Gltf -> RIO App ()
 reportGltf gltf = do
   reportAsset $ gltf ^. _asset
-  
+
   logInfo "" -- Blank line
 
   reportNodes gltf $ reportMesh gltf
@@ -84,7 +86,7 @@ reportMeshVerbose gltf mesh = do
   forM_ (mesh ^. _meshPrimitives) $ \primitive' -> do
     -- Report Vertices
     logInfo "      Vertices:"
-    
+
     let positions = primitive' ^. _meshPrimitivePositions
     forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
       forM_ (positions Vector.!? fromIntegral index) $ \position -> do
@@ -96,10 +98,20 @@ reportMeshVerbose gltf mesh = do
       forM_ (normals Vector.!? fromIntegral index) $ \normal -> do
         logInfo $ "        [" <> display index <> "]: " <> displayV3 normal
 
+    -- Report Vertex Colors
+    let colors = primitive' ^. _meshPrimitiveColors
+    forM_ (listToMaybe (Vector.toList colors)) $ \_ -> do
+      logInfo "      Colors:"
+
+      forM_ (primitive' ^. _meshPrimitiveIndices) $ \index -> do
+        forM_ (colors Vector.!? fromIntegral index) $ \color -> do
+          let color' = displayV4 (RoundedFloat <$> color)
+          logInfo $ "        [" <> display index <> "]: " <> color'
+
     -- Report material
     forM_ (primitive' ^. _meshPrimitiveMaterial) $ \materialId -> do
       forM_ (gltf ^. _materials . to (Vector.!? materialId)) reportMaterial
-    
+
 reportMesh :: Gltf -> Mesh -> RIO App ()
 reportMesh gltf mesh = do
   logInfo $ "    Name: " <> mesh ^. _meshName . to (display . fromMaybe "Unknown")
@@ -131,12 +143,12 @@ reportMaterial material = do
   logInfo "      Material:"
   logInfo $ "        Name: " <>
     material ^. _materialName . to (display . fromMaybe "Unknown")
-  
+
   forM_ (material ^. _materialPbrMetallicRoughness) $ \pbr -> do
     logInfo $ "        Base Color Factor: " <> pbr ^. _pbrBaseColorFactor . to displayV4
     logInfo $ "        Metallic Factor: " <> pbr ^. _pbrMetallicFactor . to display
     logInfo $ "        Roughness Factor: " <> pbr ^. _pbrRoughnessFactor . to display
-  
+
 displayV3 :: Display a => V3 a -> Utf8Builder
 displayV3 (V3 x y z)
   = "("
@@ -154,3 +166,8 @@ displayV4 (V4 w x y z)
   <> display z <>
   ")"
 
+newtype RoundedFloat = RoundedFloat { unFloat :: Float }
+  deriving (Eq, Show)
+
+instance Display RoundedFloat
+  where textDisplay (RoundedFloat f) = Text.pack $ showFFloatAlt (Just 1) f ""
