@@ -12,6 +12,8 @@
 
         perSystem = { self', pkgs, ... }: {
           haskellProjects.default = {
+            projectFlakeName = "gltf-loader";
+
             settings = {
               gltf-codec = {
                 broken = false;
@@ -31,7 +33,6 @@
           };
 
           packages.default = self'.packages.gltf-loader;
-
         };
       };
 }
