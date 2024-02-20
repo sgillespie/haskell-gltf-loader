@@ -1,4 +1,4 @@
-name: "Test"
+name: "Build"
 on:
   pull_request:
   push:
@@ -14,5 +14,4 @@ jobs:
       with:
         name: sgillespie
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix build
-    - run: nix develop -c "echo OK"
+    - run: nix build .#
