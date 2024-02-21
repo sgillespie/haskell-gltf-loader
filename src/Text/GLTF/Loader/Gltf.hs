@@ -158,7 +158,7 @@ data Node = Node
     -- | The user-defined name of this object.
     nodeName :: Maybe Text,
     -- | The node's unit quaternion rotation.
-    nodeRotation :: Maybe (V4 Float),
+    nodeRotation :: Maybe (Quaternion Float),
     -- | The node's non-uniform scale
     nodeScale :: Maybe (V3 Float),
     -- | The node's translation along the x, y, and z axes.
@@ -414,7 +414,7 @@ _nodeName :: Lens' Node (Maybe Text)
 _nodeName = lens nodeName (\node name' -> node { nodeName = name' })
 
 -- | The node's unit quaternion rotation.
-_nodeRotation :: Lens' Node (Maybe (V4 Float))
+_nodeRotation :: Lens' Node (Maybe (Quaternion Float))
 _nodeRotation = lens nodeRotation (\node rotation' -> node { nodeRotation = rotation' })
 
 -- | The node's non-uniform scale

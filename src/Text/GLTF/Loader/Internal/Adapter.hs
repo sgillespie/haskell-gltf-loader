@@ -28,7 +28,7 @@ import Text.GLTF.Loader.Gltf
 import Text.GLTF.Loader.Internal.BufferAccessor
 import Text.GLTF.Loader.Internal.MonadAdapter
 
-import Linear (V3(..), V4(..))
+import Linear (Quaternion(..), V3(..), V4(..))
 import RIO
 import RIO.Partial (toEnum)
 import RIO.Vector.Partial ((!))
@@ -160,7 +160,7 @@ adaptNode Node.Node{..} = Node
   { nodeChildren = maybe mempty (fmap Node.unNodeIx) children,
     nodeMeshId = Mesh.unMeshIx <$> mesh,
     nodeName = name,
-    nodeRotation = toV4 <$> rotation,
+    nodeRotation = toQuaternion <$> rotation,
     nodeScale = toV3 <$> scale,
     nodeTranslation = toV3 <$> translation,
     nodeWeights = maybe [] toList weights
@@ -272,3 +272,6 @@ toV3 (x, y, z) = V3 x y z
 
 toV4 :: (a, a, a, a) -> V4 a
 toV4 (w, x, y, z) = V4 w x y z
+
+toQuaternion :: (a, a, a, a) -> Quaternion a
+toQuaternion (x, y, z, w) = Quaternion w (V3 x y z)
