@@ -40,6 +40,7 @@ import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.Sampler as Sampler
+import qualified Codec.GlTF.Scene as Scene
 import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Data.HashMap.Strict as HashMap
@@ -79,6 +80,7 @@ adaptGltf = do
       gltfMeshes = gltfMeshes,
       gltfNodes = adaptNodes nodes,
       gltfSamplers = adaptSamplers samplers,
+      gltfScenes = adaptScenes scenes,
       gltfTextures = adaptTextures textures
     }
 
@@ -111,6 +113,9 @@ adaptNodes = maybe mempty (fmap adaptNode)
 
 adaptSamplers :: Maybe (Vector Sampler.Sampler) -> Vector Sampler
 adaptSamplers = maybe mempty (fmap adaptSampler)
+
+adaptScenes :: Maybe (Vector Scene.Scene) -> Vector Scene
+adaptScenes = maybe mempty (fmap adaptScene)
 
 adaptTextures :: Maybe (Vector Texture.Texture) -> Vector Texture
 adaptTextures = maybe mempty (fmap adaptTexture)
@@ -168,6 +173,12 @@ adaptSampler Sampler.Sampler{..} = Sampler
     samplerName = name,
     samplerWrapS = adaptSamplerWrap wrapS,
     samplerWrapT = adaptSamplerWrap wrapT
+  }
+
+adaptScene :: Scene.Scene -> Scene
+adaptScene Scene.Scene{..} = Scene
+  { sceneName = name,
+    sceneNodes = maybe mempty (fmap Node.unNodeIx) nodes
   }
 
 adaptTexture :: Texture.Texture -> Texture

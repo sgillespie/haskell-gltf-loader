@@ -14,6 +14,7 @@ module Text.GLTF.Loader.Gltf
     MeshPrimitiveMode(..),
     Sampler(..),
     SamplerWrap(..),
+    Scene(..),
     Texture(..),
     TextureInfo(..),
     -- * Lenses
@@ -90,6 +91,7 @@ data Gltf = Gltf
     gltfMaterials :: Vector Material,
     gltfMeshes :: Vector Mesh,
     gltfNodes :: Vector Node,
+    gltfScenes :: Vector Scene,
     gltfSamplers :: Vector Sampler,
     gltfTextures :: Vector Texture
   } deriving (Eq, Show)
@@ -173,6 +175,14 @@ data Sampler = Sampler
     samplerWrapS :: SamplerWrap,
     -- | T (V) wrapping mode. All valid values correspond to WebGL enums.
     samplerWrapT :: SamplerWrap
+  } deriving (Eq, Show)
+
+-- | A scene and its root nodes
+data Scene = Scene
+  { -- | The scene name
+    sceneName :: Maybe Text,
+    -- | The scene's root nodes
+    sceneNodes :: Vector Int
   } deriving (Eq, Show)
 
 -- | A texture and its sampler.
