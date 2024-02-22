@@ -149,8 +149,12 @@ adaptMaterial Material.Material{..} =
       materialAlphaMode = adaptAlphaMode alphaMode,
       materialDoubleSided = doubleSided,
       materialEmissiveFactor = toV3 emissiveFactor,
+      materialEmissiveTexture = adaptTextureInfo <$> emissiveTexture,
       materialName = name,
-      materialPbrMetallicRoughness = adaptPbrMetallicRoughness <$> pbrMetallicRoughness
+      materialNormalTexture = adaptNormalTextureInfo <$> normalTexture,
+      materialOcclusionTexture = adaptOcclusionTextureInfo <$> occlusionTexture,
+      materialPbrMetallicRoughness = adaptPbrMetallicRoughness
+                                       <$> pbrMetallicRoughness
     }
 
 adaptMesh :: Mesh.Mesh -> Adapter Mesh
@@ -223,7 +227,9 @@ adaptPbrMetallicRoughness PbrMetallicRoughness.PbrMetallicRoughness{..} =
     { pbrBaseColorFactor = toV4 baseColorFactor,
       pbrBaseColorTexture = adaptTextureInfo <$> baseColorTexture,
       pbrMetallicFactor = metallicFactor,
-      pbrRoughnessFactor = roughnessFactor
+      pbrRoughnessFactor = roughnessFactor,
+      pbrMetallicRoughnessTexture = adaptTextureInfo
+                                      <$> metallicRoughnessTexture
     }
 
 adaptMeshPrimitives :: Vector Mesh.MeshPrimitive -> Adapter (Vector MeshPrimitive)
@@ -249,12 +255,34 @@ adaptSamplerWrap Sampler.MIRRORED_REPEAT = MirroredRepeat
 adaptSamplerWrap Sampler.REPEAT = Repeat
 adaptSamplerWrap mode = error $ "Invalid SamplerWrap: " <> show mode
 
-adaptTextureInfo :: TextureInfo.TextureInfo a -> TextureInfo
+adaptTextureInfo :: TextureInfo.TextureInfo_ -> TextureInfo
 adaptTextureInfo TextureInfo.TextureInfo{..} =
   TextureInfo
     { textureId = index,
       textureTexCoord = texCoord
     }
+
+adaptNormalTextureInfo
+  :: TextureInfo.TextureInfo Material.MaterialNormal
+  -> NormalTextureInfo
+adaptNormalTextureInfo TextureInfo.TextureInfo{..} =
+  let Material.MaterialNormal{..} = subtype
+  in NormalTextureInfo
+     { normalTextureId = index,
+       normalTextureTexCoord = texCoord,
+       normalTextureScale = scale
+     }
+
+adaptOcclusionTextureInfo
+  :: TextureInfo.TextureInfo Material.MaterialOcclusion
+  -> OcclusionTextureInfo
+adaptOcclusionTextureInfo TextureInfo.TextureInfo{..} =
+  let Material.MaterialOcclusion{..} = subtype
+  in OcclusionTextureInfo
+     { occlusionTextureId = index,
+       occlusionTextureTexCoord = texCoord,
+       occlusionTextureStrength = strength
+     }
 
 adaptMeshPrimitive :: Mesh.MeshPrimitive -> Adapter MeshPrimitive
 adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
