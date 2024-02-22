@@ -17,6 +17,8 @@ module Text.GLTF.Loader.Gltf
     Scene (..),
     Texture (..),
     TextureInfo (..),
+    NormalTextureInfo (..),
+    OcclusionTextureInfo (..),
 
     -- * Lenses
 
@@ -149,8 +151,14 @@ data Material = Material
     materialDoubleSided :: Bool,
     -- | The factors for the emissive color of the material.
     materialEmissiveFactor :: V3 Float,
+    -- | The texture for the emissive color of the material.
+    materialEmissiveTexture :: Maybe TextureInfo,
     -- | The user-defined name of this object.
     materialName :: Maybe Text,
+    -- | The material's tangent space normal map texture
+    materialNormalTexture :: Maybe NormalTextureInfo,
+    -- | The material's ambient occlusion texture
+    materialOcclusionTexture :: Maybe OcclusionTextureInfo,
     -- | Metallic roughness Physically Based Rendering (PBR) methodology parameter values.
     materialPbrMetallicRoughness :: Maybe PbrMetallicRoughness
   }
@@ -260,6 +268,8 @@ data PbrMetallicRoughness = PbrMetallicRoughness
     pbrBaseColorTexture :: Maybe TextureInfo,
     -- | The factor for the metalness of the material.
     pbrMetallicFactor :: Float,
+    -- | The combined metallic roughness texture of the material
+    pbrMetallicRoughnessTexture :: Maybe TextureInfo,
     -- | The factor for the roughness of the material.
     pbrRoughnessFactor :: Float
   }
@@ -305,6 +315,32 @@ data TextureInfo = TextureInfo
     -- TEXCOORD_<set_index> which is a reference to a key in mesh.primitives.attributes
     -- (e.g. a value of 0 corresponds to TEXCOORD_0).
     textureTexCoord :: Int
+  }
+  deriving (Eq, Show)
+
+-- | Reference to a normal map texture
+data NormalTextureInfo = NormalTextureInfo
+  { -- | The index of the texture.
+    normalTextureId :: Int,
+    -- | This integer value is used to construct a string in the format
+    -- TEXCOORD_<set_index> which is a reference to a key in mesh.primitives.attributes
+    -- (e.g. a value of 0 corresponds to TEXCOORD_0).
+    normalTextureTexCoord :: Int,
+    -- | The scalar parameter applied to each normal vector of the normal
+    -- texture.
+    normalTextureScale :: Float
+  }
+  deriving (Eq, Show)
+
+data OcclusionTextureInfo = OcclusionTextureInfo
+  { -- | The index of the texture.
+    occlusionTextureId :: Int,
+    -- | This integer value is used to construct a string in the format
+    -- TEXCOORD_<set_index> which is a reference to a key in mesh.primitives.attributes
+    -- (e.g. a value of 0 corresponds to TEXCOORD_0).
+    occlusionTextureTexCoord :: Int,
+    -- | A scalar multiplier controlling the amount of occlusion applied.
+    occlusionTextureStrength :: Float
   }
   deriving (Eq, Show)
 
