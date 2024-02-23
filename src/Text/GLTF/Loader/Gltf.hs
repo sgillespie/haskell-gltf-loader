@@ -188,7 +188,7 @@ data Texture = Texture
 -- | Geometry to be rendered with the given material
 data MeshPrimitive = MeshPrimitive
   { -- | A Vector of vertex indices.
-    meshPrimitiveIndices :: Vector Word16,
+    meshPrimitiveIndices :: Vector Word32,
     -- | The index of the material to apply to this primitive when rendering.
     meshPrimitiveMaterial :: Maybe Int,
     -- | The topology type of primitives to render.
@@ -241,7 +241,7 @@ data MinFilter
   | MinLinearMipmapLinear
   deriving (Enum, Eq, Show)
 
--- | Sampler wrapping mode.  
+-- | Sampler wrapping mode.
 data SamplerWrap
   = ClampToEdge
   | MirroredRepeat
@@ -460,7 +460,7 @@ _textureSourceId = lens
   (\tex source -> tex { textureSourceId = source })
 
 -- | A Vector of vertex indices.
-_meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Word16)
+_meshPrimitiveIndices :: Lens' MeshPrimitive (Vector Word32)
 _meshPrimitiveIndices = lens
   meshPrimitiveIndices
   (\primitive' indices -> primitive' { meshPrimitiveIndices = indices })

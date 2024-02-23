@@ -1,6 +1,7 @@
 module Text.GLTF.Loader.Internal.Decoders
   ( -- * GLTF Property-specific Type decoders
     getIndices,
+    getIndices32,
     getPositions,
     getNormals,
     getTexCoords,
@@ -22,14 +23,19 @@ module Text.GLTF.Loader.Internal.Decoders
     getFloat
   ) where
 
+import qualified Codec.GlTF.Accessor as GlTF
 import Data.Binary.Get
 import Linear
 import RIO hiding (min, max)
 import qualified RIO.Vector as Vector
 
--- | Vertex indices binary decoder
+-- | Vertex indices binary decoder, for unsigned short
 getIndices :: Get (Vector Word16)
 getIndices = getScalar getUnsignedShort
+
+-- | Vertex indices binary decoder, for unsigned int
+getIndices32 :: Get (Vector Word32)
+getIndices32 = getScalar getUnsignedInt
 
 -- | Vertex positions binary decoder
 getPositions :: Get (Vector (V3 Float))
@@ -82,7 +88,7 @@ getMat3 getter = getVector $ do
   m1_1 <- getter
   m1_2 <- getter
   m1_3 <- getter
-  
+
   m2_1 <- getter
   m2_2 <- getter
   m2_3 <- getter
@@ -103,7 +109,7 @@ getMat4 getter = getVector $ do
   m1_2 <- getter
   m1_3 <- getter
   m1_4 <- getter
-  
+
   m2_1 <- getter
   m2_2 <- getter
   m2_3 <- getter

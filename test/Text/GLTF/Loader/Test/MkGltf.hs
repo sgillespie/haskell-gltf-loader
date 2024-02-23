@@ -96,6 +96,22 @@ mkCodecAccessorIndices = Accessor.Accessor
     type' = Accessor.AttributeType "SCALAR"
   }
 
+mkCodecAccessorIndices32 :: Accessor.Accessor
+mkCodecAccessorIndices32 = Accessor.Accessor
+  { bufferView = Just $ BufferView.BufferViewIx 0,
+    byteOffset = 0,
+    componentType = Accessor.UNSIGNED_INT,
+    count = 4,
+    extensions = Nothing,
+    extras = Nothing,
+    max = Nothing,
+    min = Nothing,
+    name = Just "Accessor Indices",
+    normalized = False,
+    sparse = Nothing,
+    type' = Accessor.AttributeType "SCALAR"
+  }
+
 mkCodecAccessorNormals :: Accessor.Accessor
 mkCodecAccessorNormals = Accessor.Accessor
   {

@@ -24,6 +24,7 @@ import Codec.GlTF.URI
 import Codec.GlTF
 import Data.Binary.Get
 import Data.ByteString.Lazy (fromStrict)
+import Data.Proxy (asProxyTypeOf)
 import Foreign.Storable
 import Linear
 import RIO hiding (min, max)
@@ -44,7 +45,8 @@ data GltfImageData
 
 -- | A buffer and some metadata
 data BufferAccessor = BufferAccessor
-  { offset :: Int,
+  { componentType :: ComponentType,
+    offset :: Int,
     count :: Int,
     buffer :: GltfBuffer
   }
@@ -59,13 +61,13 @@ loadBuffers
 loadBuffers GlTF{buffers=buffers} chunk basePath = do
   let buffers' = fromMaybe [] buffers
       iforM = flip Vector.imapM
-  
+
   iforM buffers' $ \idx Buffer{..} -> do
     -- If the first buffer does not have a URI defined, it refers to a GLB chunk
     let fallback = if idx == 0 && isNothing uri
           then maybe mempty chunkData chunk
           else mempty
-    
+
     uri' <- maybe (pure fallback) (loadUri' basePath) uri
     return $ GltfBuffer uri'
 
@@ -82,8 +84,18 @@ loadImages GlTF{images=images} basePath = do
     maybe fallbackImageData (fmap ImageData . loadUri' basePath) uri
 
 -- | Decode vertex indices
-vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word16
-vertexIndices = readBufferWithGet getIndices
+vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word32
+vertexIndices gltf buffers' accessorId =
+  fromMaybe mempty $ do
+    buffer@BufferAccessor{componentType=componentType} <-
+      bufferAccessor gltf buffers' accessorId
+
+    case componentType of
+      UNSIGNED_SHORT ->
+        Just (fromIntegral <$> readFromBuffer (Proxy @Word16) getIndices buffer)
+      UNSIGNED_INT ->
+        Just (readFromBuffer (Proxy @Word32) getIndices32 buffer)
+      _ -> Nothing
 
 -- | Decode vertex positions
 vertexPositions :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
@@ -155,11 +167,12 @@ bufferAccessor GlTF{..} buffers' accessorId = do
   bufferView <- lookupBufferViewFromAccessor accessor =<< bufferViews
   buffer <- lookupBufferFromBufferView bufferView buffers'
 
-  let Accessor{byteOffset=offset, count=count} = accessor
+  let Accessor{byteOffset=offset, count=count, componentType=compTy} = accessor
       BufferView{byteOffset=offset'} = bufferView
 
   return $ BufferAccessor
-    { offset = offset + offset',
+    { componentType = compTy,
+      offset = offset + offset',
       count = count,
       buffer = buffer
     }
@@ -177,7 +190,8 @@ bufferViewAccessor GlTF{..} buffers' bufferViewId = do
   let BufferView{byteLength=length', byteOffset=offset'} = bufferView
 
   return $ BufferAccessor
-    { offset = offset',
+    { componentType = BYTE, -- There's no accessor, assume byte
+      offset = offset',
       count = length',
       buffer = buffer
     }
@@ -206,14 +220,14 @@ lookupBuffer (BufferIx bufferId) = (Vector.!? bufferId)
 -- | Decode a buffer using the given Binary decoder
 readFromBuffer
   :: Storable storable
-  => storable
+  => Proxy storable
   -> Get (Vector storable)
   -> BufferAccessor
   -> Vector storable
-readFromBuffer storable getter accessor@BufferAccessor{..}
+readFromBuffer proxy getter accessor@BufferAccessor{..}
   = runGet getter . fromStrict $ payload
   where payload = readFromBufferRaw accessor len'
-        len' = count * sizeOf storable
+        len' = count * sizeOf (asProxyTypeOf undefined proxy)
 
 -- | Read from buffer without decoding
 readFromBufferRaw :: BufferAccessor -> Int -> ByteString

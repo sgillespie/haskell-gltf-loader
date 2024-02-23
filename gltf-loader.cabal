@@ -64,6 +64,7 @@ common shared
         ScopedTypeVariables
         StandaloneDeriving
         TupleSections
+        TypeApplications
         TypeFamilies
         TypeSynonymInstances
         ViewPatterns

@@ -23,14 +23,14 @@ spec :: Spec
 spec = do
   let gltf = mkCodecGltf
       basePath = "."
-  
+
   describe "loadBuffers" $ do
     it "Reads buffers from GlTF" $ do
       buffers <- loadBuffers gltf Nothing basePath
-      
+
       let (GltfBuffer buffer') = buffers ! 0
           values = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict $ buffer'
-      
+
       values `shouldBe` ([1..4] :: Vector Integer)
 
     it "Handles malformed URI" $ do
@@ -49,21 +49,21 @@ spec = do
 
     it "Handles a chunk buffer" $ do
       let chunk = mkCodecBufferChunk
-      
+
           gltf' = gltf
             { GlTF.buffers = Just
               [ mkCodecBufferIndices { Buffer.uri = Nothing } ]
             }
       buffers <- loadBuffers gltf' (Just chunk) basePath
-      
+
       let (GltfBuffer buffer') = buffers ! 0
           values = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict $ buffer'
-      
+
       values `shouldBe` ([1..4] :: Vector Integer)
-      
+
     it "Handles chunk + buffers" $ do
       let chunk = mkCodecBufferChunk
-      
+
           gltf' = gltf
             { GlTF.buffers = Just
               [ mkCodecBufferIndices { Buffer.uri = Nothing },
@@ -71,7 +71,7 @@ spec = do
               ]
             }
       buffers <- loadBuffers gltf' (Just chunk) basePath
-      
+
       let getValue = runGet (getScalar (fromIntegral <$> getUnsignedShort)) . fromStrict
 
       forM_ buffers $ \buffer -> do
@@ -88,7 +88,7 @@ spec = do
             { GlTF.images = Just
                 [ mkCodecImage { Image.uri = Nothing } ]
             }
-      
+
       images <- loadImages gltf' basePath
       images `shouldBe` [ImageBufferView (BufferView.BufferViewIx 5)]
 
@@ -101,7 +101,7 @@ spec = do
                     }
                 ]
             }
-      
+
       images <- loadImages gltf' basePath
       images `shouldBe` [NoImageData]
 
@@ -112,13 +112,28 @@ spec = do
             }
 
       loadImages gltf' basePath `shouldThrow` anyException
-  
+
   describe "vertexIndices" $ do
     it "Reads basic values from buffer" $ do
       vertexIndices gltf buffers' accessorIdIndices `shouldBe` [1, 2, 3, 4]
 
+    it "Reads unsigned int values from buffer" $ do
+      let gltf' = gltf
+            { GlTF.accessors =
+                Just
+                  [ mkCodecAccessorIndices32,
+                    mkCodecAccessorPositions,
+                    mkCodecAccessorNormals,
+                    mkCodecAccessorTexCoords,
+                    mkCodecAccessorColors
+                  ]
+            }
+          buffers' = [ bufferIndices32, bufferPositions]
+
+      vertexIndices gltf' buffers' accessorIdIndices32 `shouldBe` [1, 2, 3, 4]
+
     it "Returns empty when accessor not defined" $ do
-      let gltf' = gltf { GlTF.accessors = Nothing } 
+      let gltf' = gltf { GlTF.accessors = Nothing }
       vertexIndices gltf' buffers' accessorIdIndices `shouldBe` []
 
     it "Returns empty when buffer not found" $ do
@@ -136,7 +151,7 @@ spec = do
         ]
 
     it "Returns empty when accessor not defined" $ do
-      let gltf' = gltf { GlTF.accessors = Nothing } 
+      let gltf' = gltf { GlTF.accessors = Nothing }
       vertexPositions gltf' buffers' accessorIdPositions `shouldBe` []
 
     it "Returns empty when buffer not found" $ do
@@ -145,10 +160,13 @@ spec = do
       vertexPositions gltf' buffers' accessorIdPositions `shouldBe` []
 
 buffers' :: Vector GltfBuffer
-buffers' = [bufferIndices, bufferPositions]
+buffers' = [bufferIndices, bufferPositions, bufferIndices32]
 
 accessorIdIndices :: Accessor.AccessorIx
 accessorIdIndices = Accessor.AccessorIx 0
+
+accessorIdIndices32 :: Accessor.AccessorIx
+accessorIdIndices32 = Accessor.AccessorIx 0
 
 accessorIdPositions :: Accessor.AccessorIx
 accessorIdPositions = Accessor.AccessorIx 1
@@ -156,6 +174,10 @@ accessorIdPositions = Accessor.AccessorIx 1
 bufferIndices :: GltfBuffer
 bufferIndices = GltfBuffer . toStrict . toLazyByteString $ putIndices
   where putIndices = foldr ((<>) . putWord16le) empty ([1, 2, 3, 4] :: [Word16])
+
+bufferIndices32 :: GltfBuffer
+bufferIndices32 = GltfBuffer . toStrict . toLazyByteString $ putIndices
+  where putIndices = foldr ((<>) . putWord32le) empty ([1, 2, 3, 4] :: [Word32])
 
 bufferPositions :: GltfBuffer
 bufferPositions = GltfBuffer . toStrict . runPut $ putPositions
