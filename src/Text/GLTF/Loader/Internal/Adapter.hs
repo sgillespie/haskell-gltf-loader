@@ -2,6 +2,7 @@
 module Text.GLTF.Loader.Internal.Adapter
   ( attributePosition,
     attributeNormal,
+    attributeTangent,
     attributeTexCoord,
     attributeColors,
     runAdapter,
@@ -53,6 +54,9 @@ attributePosition = "POSITION"
 
 attributeNormal :: Text
 attributeNormal = "NORMAL"
+
+attributeTangent :: Text
+attributeTangent = "TANGENT"
 
 attributeTexCoord :: Text
 attributeTexCoord = "TEXCOORD_0"
@@ -296,6 +300,7 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
         meshPrimitiveMode = adaptMeshPrimitiveMode mode,
         meshPrimitiveNormals = maybe mempty (vertexNormals gltf buffers') normals,
         meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
+        meshPrimitiveTangents = maybe mempty (vertexTangents gltf buffers') tangents,
         meshPrimitiveTexCoords = maybe mempty (vertexTexCoords gltf buffers') texCoords,
         meshPrimitiveColors =
           maybe mempty (fmap (mapV4 toRatio) . vertexColors gltf buffers') colors
@@ -303,6 +308,7 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
   where
     positions = attributes HashMap.!? attributePosition
     normals = attributes HashMap.!? attributeNormal
+    tangents = attributes HashMap.!? attributeTangent
     texCoords = attributes HashMap.!? attributeTexCoord
     colors = attributes HashMap.!? attributeColors
     toRatio w = fromIntegral w / fromIntegral (maxBound :: Word16)

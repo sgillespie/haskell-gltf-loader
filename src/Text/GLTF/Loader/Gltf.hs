@@ -241,6 +241,8 @@ data MeshPrimitive = MeshPrimitive
     meshPrimitiveNormals :: Vector (V3 Float),
     -- | A Vector of vertex positions.
     meshPrimitivePositions :: Vector (V3 Float),
+    -- | A Vector of vertex tangents
+    meshPrimitiveTangents :: Vector (V4 Float),
     -- | A Vector of vertex texture coordinates
     meshPrimitiveTexCoords :: Vector (V2 Float),
     -- | A Vector of vertex colors.
