@@ -25,7 +25,6 @@ module Text.GLTF.Loader.Internal.Decoders
     getFloat,
   ) where
 
-import qualified Codec.GlTF.Accessor as GlTF
 import Data.Binary.Get
 import Linear
 import RIO hiding (max, min)
@@ -73,68 +72,30 @@ getVec4 getter = getVector $ V4 <$> getter <*> getter <*> getter <*> getter
 
 -- | 2x2 Matrix binary decoder
 getMat2 :: Get a -> Get (Vector (M22 a))
-getMat2 getter = getVector $ do
-  m1_1 <- getter
-  m1_2 <- getter
-
-  m2_1 <- getter
-  m2_2 <- getter
-
-  return
+getMat2 getter =
+  getVector
     $ V2
-      (V2 m1_1 m2_1)
-      (V2 m1_2 m2_2)
+    <$> (V2 <$> getter <*> getter)
+    <*> (V2 <$> getter <*> getter)
 
 -- | 3x3 Matrix binary decoder
 getMat3 :: Get a -> Get (Vector (M33 a))
-getMat3 getter = getVector $ do
-  m1_1 <- getter
-  m1_2 <- getter
-  m1_3 <- getter
-
-  m2_1 <- getter
-  m2_2 <- getter
-  m2_3 <- getter
-
-  m3_1 <- getter
-  m3_2 <- getter
-  m3_3 <- getter
-
-  return
+getMat3 getter =
+  getVector
     $ V3
-      (V3 m1_1 m2_1 m3_1)
-      (V3 m1_2 m2_2 m3_2)
-      (V3 m1_3 m2_3 m3_3)
+    <$> (V3 <$> getter <*> getter <*> getter)
+    <*> (V3 <$> getter <*> getter <*> getter)
+    <*> (V3 <$> getter <*> getter <*> getter)
 
 -- | 4x4 Matrix binary decoder
 getMat4 :: Get a -> Get (Vector (M44 a))
-getMat4 getter = getVector $ do
-  m1_1 <- getter
-  m1_2 <- getter
-  m1_3 <- getter
-  m1_4 <- getter
-
-  m2_1 <- getter
-  m2_2 <- getter
-  m2_3 <- getter
-  m2_4 <- getter
-
-  m3_1 <- getter
-  m3_2 <- getter
-  m3_3 <- getter
-  m3_4 <- getter
-
-  m4_1 <- getter
-  m4_2 <- getter
-  m4_3 <- getter
-  m4_4 <- getter
-
-  return
+getMat4 getter =
+  getVector
     $ V4
-      (V4 m1_1 m2_1 m3_1 m4_1)
-      (V4 m1_2 m2_2 m3_2 m4_2)
-      (V4 m1_3 m2_3 m3_3 m4_3)
-      (V4 m1_4 m2_4 m3_4 m4_4)
+    <$> (V4 <$> getter <*> getter <*> getter <*> getter)
+    <*> (V4 <$> getter <*> getter <*> getter <*> getter)
+    <*> (V4 <$> getter <*> getter <*> getter <*> getter)
+    <*> (V4 <$> getter <*> getter <*> getter <*> getter)
 
 -- | Byte binary decoder
 getByte :: Get Int8

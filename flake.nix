@@ -46,6 +46,7 @@
           programs = {
             nixpkgs-fmt.enable = true;
             fourmolu.enable = true;
+            hlint.enable = true;
           };
         };
 
