@@ -279,6 +279,7 @@ loaderGltf = Gltf
     gltfMeshes = [loaderMesh],
     gltfNodes = [loaderNode],
     gltfSamplers = [loaderSampler],
+    gltfScenes = [loaderScene],
     gltfTextures = [loaderTexture]
   }
 
@@ -332,6 +333,12 @@ loaderSampler = Sampler
     samplerName = Just "Sampler",
     samplerWrapS = ClampToEdge,
     samplerWrapT = Repeat
+  }
+
+loaderScene :: Scene
+loaderScene = Scene
+  { sceneName = Just "Scene",
+    sceneNodes = [0]
   }
 
 loaderTexture :: Texture
