@@ -25,6 +25,7 @@ module Text.GLTF.Loader.Gltf
     _meshes,
     _nodes,
     _samplers,
+    _scenes,
     _textures,
     -- ** Asset Lenses
     _assetVersion,
@@ -60,6 +61,9 @@ module Text.GLTF.Loader.Gltf
     _samplerName,
     _samplerWrapS,
     _samplerWrapT,
+    -- ** Scene Lenses
+    _sceneName,
+    _sceneNodes,
     -- ** Texture Lenses
     _textureName,
     _textureSamplerId,
@@ -91,8 +95,8 @@ data Gltf = Gltf
     gltfMaterials :: Vector Material,
     gltfMeshes :: Vector Mesh,
     gltfNodes :: Vector Node,
-    gltfScenes :: Vector Scene,
     gltfSamplers :: Vector Sampler,
+    gltfScenes :: Vector Scene,
     gltfTextures :: Vector Texture
   } deriving (Eq, Show)
 
@@ -181,7 +185,7 @@ data Sampler = Sampler
 data Scene = Scene
   { -- | The scene name
     sceneName :: Maybe Text,
-    -- | The scene's root nodes
+    -- | The indices of this scene's root nodes.
     sceneNodes :: Vector Int
   } deriving (Eq, Show)
 
@@ -304,6 +308,10 @@ _nodes = lens gltfNodes (\gltf nodes -> gltf { gltfNodes = nodes })
 _samplers :: Lens' Gltf (Vector Sampler)
 _samplers = lens gltfSamplers (\gltf samplers -> gltf { gltfSamplers = samplers })
 
+-- | A Vector of Scenes. A Scene defines a Node hierachy.
+_scenes :: Lens' Gltf (Vector Scene)
+_scenes = lens gltfScenes (\gltf scenes -> gltf { gltfScenes = scenes })
+
 -- | A texture and its sampler.
 _textures :: Lens' Gltf (Vector Texture)
 _textures = lens gltfTextures (\gltf texs -> gltf { gltfTextures = texs })
@@ -422,6 +430,14 @@ _nodeTranslation = lens
 -- | The weights of the instantiated morph target.
 _nodeWeights :: Lens' Node [Float]
 _nodeWeights = lens nodeWeights (\node weights' -> node { nodeWeights = weights' })
+
+-- | The name of the scene.
+_sceneName :: Lens' Scene (Maybe Text)
+_sceneName = lens sceneName (\scene name -> scene { sceneName = name })
+
+-- | The indices of this scene's root nodes.
+_sceneNodes :: Lens' Scene (Vector Int)
+_sceneNodes = lens sceneNodes (\scene nodes -> scene { sceneNodes = nodes })
 
 -- | Magnification filter.
 _samplerMagFilter :: Lens' Sampler (Maybe MagFilter)
