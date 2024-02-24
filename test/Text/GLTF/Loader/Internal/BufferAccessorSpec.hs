@@ -128,9 +128,9 @@ spec = do
                     mkCodecAccessorColors
                   ]
             }
-          buffers' = [ bufferIndices32, bufferPositions]
+          buffersWithIndices32 = [ bufferIndices32, bufferPositions]
 
-      vertexIndices gltf' buffers' accessorIdIndices32 `shouldBe` [1, 2, 3, 4]
+      vertexIndices gltf' buffersWithIndices32 accessorIdIndices32 `shouldBe` [1, 2, 3, 4]
 
     it "Returns empty when accessor not defined" $ do
       let gltf' = gltf { GlTF.accessors = Nothing }
@@ -160,7 +160,7 @@ spec = do
       vertexPositions gltf' buffers' accessorIdPositions `shouldBe` []
 
 buffers' :: Vector GltfBuffer
-buffers' = [bufferIndices, bufferPositions, bufferIndices32]
+buffers' = [bufferIndices, bufferPositions]
 
 accessorIdIndices :: Accessor.AccessorIx
 accessorIdIndices = Accessor.AccessorIx 0
