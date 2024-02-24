@@ -3,36 +3,52 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flakeParts.url = "github:hercules-ci/flake-parts";
     haskell-flake.url = "github:srid/haskell-flake";
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nixpkgs, flakeParts, ... }:
-      flakeParts.lib.mkFlake { inherit inputs; } {
-        systems = nixpkgs.lib.systems.flakeExposed;
-        imports = [ inputs.haskell-flake.flakeModule ];
+    flakeParts.lib.mkFlake { inherit inputs; } {
+      systems = nixpkgs.lib.systems.flakeExposed;
+      imports = [
+        inputs.haskell-flake.flakeModule
+        inputs.treefmt-nix.flakeModule
+      ];
 
-        perSystem = { self', pkgs, ... }: {
-          haskellProjects.default = {
-            projectFlakeName = "gltf-loader";
+      perSystem = { self', pkgs, ... }: {
+        haskellProjects.default = {
+          projectFlakeName = "gltf-loader";
 
-            settings = {
-              gltf-codec = {
-                broken = false;
-                check = false;
-              };
-            };
-
-            devShell = {
-              enable = true;
-
-              tools = hsPkgs: {
-                cabal-install = hsPkgs.cabal-install;
-                haskell-language-server = hsPkgs.haskell-language-server;
-              };
-              hlsCheck.enable = true;
+          settings = {
+            gltf-codec = {
+              broken = false;
+              check = false;
             };
           };
 
-          packages.default = self'.packages.gltf-loader;
+          devShell = {
+            enable = true;
+
+            tools = hsPkgs: {
+              cabal-install = hsPkgs.cabal-install;
+              fourmolu = hsPkgs.fourmolu;
+              haskell-language-server = hsPkgs.haskell-language-server;
+              nixpkgs-fmt = pkgs.nixpkgs-fmt;
+              hlint = hsPkgs.hlint;
+            };
+
+            hlsCheck.enable = true;
+          };
         };
+
+        treefmt.config = {
+          projectRootFile = "flake.nix";
+          programs.nixpkgs-fmt.enable = true;
+        };
+
+        packages.default = self'.packages.gltf-loader;
       };
+    };
 }
