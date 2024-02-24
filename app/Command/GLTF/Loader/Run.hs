@@ -5,11 +5,11 @@ import Text.GLTF.Loader
 
 import Lens.Micro
 import Lens.Micro.Platform ()
-import Linear (V3(..), V4(..))
+import Linear (V3 (..), V4 (..))
 import Numeric
 import RIO
-import qualified RIO.Vector.Boxed as Vector
 import qualified RIO.Text as Text
+import qualified RIO.Vector.Boxed as Vector
 
 run :: RIO App ()
 run = do
@@ -18,9 +18,10 @@ run = do
       binary = options ^. _optionsBinary
       summary = options ^. _optionsSummary
       verbose = options ^. _optionsVerbose
-      fromFile = if binary
-        then fmap (over _Right (^. _gltf)) . fromBinaryFile
-        else fromJsonFile
+      fromFile =
+        if binary
+          then fmap (over _Right (^. _gltf)) . fromBinaryFile
+          else fromJsonFile
 
   logInfo $ "File: " <> fromString file
   result <- liftIO $ fromFile file
@@ -33,16 +34,15 @@ reporter _ True = reportSummary
 reporter _ _ = reportGltf
 
 reportError :: HasLogFunc logger => Errors -> RIO logger ()
-reportError err
-  = logError (display err)
-  >> exitFailure
+reportError err =
+  logError (display err)
+    >> exitFailure
 
 reportVerbose :: Gltf -> RIO App ()
 reportVerbose gltf = do
   reportAsset $ gltf ^. _asset
 
   logInfo "" -- Blank line
-
   reportNodes gltf $ reportMeshVerbose gltf
 
 reportSummary :: Gltf -> RIO App ()
@@ -50,7 +50,6 @@ reportSummary gltf = do
   reportAsset $ gltf ^. _asset
 
   logInfo "" -- Blank line
-
   reportNodes gltf reportMeshSummary
 
 reportGltf :: Gltf -> RIO App ()
@@ -58,12 +57,12 @@ reportGltf gltf = do
   reportAsset $ gltf ^. _asset
 
   logInfo "" -- Blank line
-
   reportNodes gltf $ reportMesh gltf
 
 reportAsset :: Asset -> RIO App ()
 reportAsset asset = do
-  logInfo $ "Generator: " <> asset ^. _assetGenerator . to (fromMaybe "Unknown") . to display
+  logInfo $ "Generator: " <> asset
+    ^. _assetGenerator . to (fromMaybe "Unknown") . to display
   logInfo $ "Version: " <> asset ^. _assetVersion . to display
 
 reportNodes :: Gltf -> (Mesh -> RIO App ()) -> RIO App ()
@@ -141,8 +140,10 @@ reportMeshSummary mesh = do
 reportMaterial :: Material -> RIO App ()
 reportMaterial material = do
   logInfo "      Material:"
-  logInfo $ "        Name: " <>
-    material ^. _materialName . to (display . fromMaybe "Unknown")
+  logInfo
+    $ "        Name: "
+    <> material
+    ^. _materialName . to (display . fromMaybe "Unknown")
 
   forM_ (material ^. _materialPbrMetallicRoughness) $ \pbr -> do
     logInfo $ "        Base Color Factor: " <> pbr ^. _pbrBaseColorFactor . to displayV4
@@ -150,24 +151,29 @@ reportMaterial material = do
     logInfo $ "        Roughness Factor: " <> pbr ^. _pbrRoughnessFactor . to display
 
 displayV3 :: Display a => V3 a -> Utf8Builder
-displayV3 (V3 x y z)
-  = "("
-  <> display x <> ", "
-  <> display y <> ", "
-  <> display z <>
-  ")"
+displayV3 (V3 x y z) =
+  "("
+    <> display x
+    <> ", "
+    <> display y
+    <> ", "
+    <> display z
+    <> ")"
 
 displayV4 :: Display a => V4 a -> Utf8Builder
-displayV4 (V4 w x y z)
-  = "("
-  <> display w <> ", "
-  <> display x <> ", "
-  <> display y <> ", "
-  <> display z <>
-  ")"
+displayV4 (V4 w x y z) =
+  "("
+    <> display w
+    <> ", "
+    <> display x
+    <> ", "
+    <> display y
+    <> ", "
+    <> display z
+    <> ")"
 
-newtype RoundedFloat = RoundedFloat { unFloat :: Float }
+newtype RoundedFloat = RoundedFloat {unFloat :: Float}
   deriving (Eq, Show)
 
-instance Display RoundedFloat
-  where textDisplay (RoundedFloat f) = Text.pack $ showFFloatAlt (Just 1) f ""
+instance Display RoundedFloat where
+  textDisplay (RoundedFloat f) = Text.pack $ showFFloatAlt (Just 1) f ""

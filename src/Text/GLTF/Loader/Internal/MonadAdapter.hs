@@ -1,15 +1,15 @@
 module Text.GLTF.Loader.Internal.MonadAdapter
-  ( Adapter(),
-    AdaptEnv(..),
+  ( Adapter (),
+    AdaptEnv (..),
     getGltf,
     getBuffers,
-    getImages
+    getImages,
   ) where
 
 import Text.GLTF.Loader.Internal.BufferAccessor
 
-import RIO
 import qualified Codec.GlTF as GlTF
+import RIO
 
 type Adapter = Reader AdaptEnv
 

@@ -1,10 +1,10 @@
 module Text.GLTF.Loader.Errors
-  ( Errors(..),
+  ( Errors (..),
     _ReadError,
-    _ImpossibleError
+    _ImpossibleError,
   ) where
 
-import Lens.Micro (Traversal'())
+import Lens.Micro (Traversal' ())
 import RIO
 
 data Errors

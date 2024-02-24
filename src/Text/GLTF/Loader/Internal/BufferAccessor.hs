@@ -1,9 +1,11 @@
 module Text.GLTF.Loader.Internal.BufferAccessor
-  ( GltfBuffer(..),
-    GltfImageData(..),
+  ( GltfBuffer (..),
+    GltfImageData (..),
+
     -- * Loading GLTF buffers
     loadBuffers,
     loadImages,
+
     -- * Deserializing Accessors
     vertexIndices,
     vertexPositions,
@@ -15,26 +17,25 @@ module Text.GLTF.Loader.Internal.BufferAccessor
 
 import Text.GLTF.Loader.Internal.Decoders
 
-import Codec.GLB (Chunk(..))
+import Codec.GLB (Chunk (..))
+import Codec.GlTF
 import Codec.GlTF.Accessor
 import Codec.GlTF.Buffer
 import Codec.GlTF.BufferView
 import Codec.GlTF.Image
 import Codec.GlTF.URI
-import Codec.GlTF
 import Data.Binary.Get
 import Data.ByteString.Lazy (fromStrict)
 import Data.Proxy (asProxyTypeOf)
 import Foreign.Storable
 import Linear
-import RIO hiding (min, max)
+import RIO hiding (max, min)
+import qualified RIO.ByteString as ByteString
 import RIO.FilePath
 import qualified RIO.Vector as Vector
-import qualified RIO.ByteString as ByteString
 
 -- | Holds the entire payload of a glTF buffer
-newtype GltfBuffer
-  = GltfBuffer { unBuffer :: ByteString }
+newtype GltfBuffer = GltfBuffer {unBuffer :: ByteString}
   deriving (Eq, Show, Semigroup, Monoid)
 
 data GltfImageData
@@ -56,17 +57,19 @@ loadBuffers
   :: MonadUnliftIO io
   => GlTF
   -> Maybe Chunk
-  -> FilePath -- ^ Base path of GlTF file
+  -> FilePath
+  -- ^ Base path of GlTF file
   -> io (Vector GltfBuffer)
-loadBuffers GlTF{buffers=buffers} chunk basePath = do
+loadBuffers GlTF{buffers = buffers} chunk basePath = do
   let buffers' = fromMaybe [] buffers
       iforM = flip Vector.imapM
 
   iforM buffers' $ \idx Buffer{..} -> do
     -- If the first buffer does not have a URI defined, it refers to a GLB chunk
-    let fallback = if idx == 0 && isNothing uri
-          then maybe mempty chunkData chunk
-          else mempty
+    let fallback =
+          if idx == 0 && isNothing uri
+            then maybe mempty chunkData chunk
+            else mempty
 
     uri' <- maybe (pure fallback) (loadUri' basePath) uri
     return $ GltfBuffer uri'
@@ -74,9 +77,10 @@ loadBuffers GlTF{buffers=buffers} chunk basePath = do
 loadImages
   :: MonadUnliftIO io
   => GlTF
-  -> FilePath -- ^ Base path of GlTF file
+  -> FilePath
+  -- ^ Base path of GlTF file
   -> io (Vector GltfImageData)
-loadImages GlTF{images=images} basePath = do
+loadImages GlTF{images = images} basePath = do
   let images' = fromMaybe [] images
 
   Vector.forM images' $ \Image{..} -> do
@@ -87,7 +91,7 @@ loadImages GlTF{images=images} basePath = do
 vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word32
 vertexIndices gltf buffers' accessorId =
   fromMaybe mempty $ do
-    buffer@BufferAccessor{componentType=componentType} <-
+    buffer@BufferAccessor{componentType = componentType} <-
       bufferAccessor gltf buffers' accessorId
 
     case componentType of
@@ -120,16 +124,18 @@ imageDataRaw = readBufferView
 -- | Return a buffer view undecoded
 readBufferView :: GlTF -> Vector GltfBuffer -> BufferViewIx -> Maybe ByteString
 readBufferView gltf buffers' bufferViewId = do
-  accessor@BufferAccessor{count=length'}
-    <- bufferViewAccessor gltf buffers' bufferViewId
+  accessor@BufferAccessor{count = length'} <-
+    bufferViewAccessor gltf buffers' bufferViewId
 
   return $ readFromBufferRaw accessor length'
 
 -- | Read a URI. Throws error on failure
 loadUri'
   :: MonadUnliftIO io
-  => FilePath -- ^ Base path
-  -> URI      -- ^ URI to load
+  => FilePath
+  -- ^ Base path
+  -> URI
+  -- ^ URI to load
   -> io ByteString
 loadUri' baseDir uri' = do
   readRes <- liftIO $ loadURI (loadFile baseDir) uri'
@@ -151,10 +157,11 @@ readBufferWithGet
   -> Vector GltfBuffer
   -> AccessorIx
   -> Vector storable
-readBufferWithGet getter gltf buffers' accessorId
-  = maybe mempty
-      (readFromBuffer undefined getter)
-      (bufferAccessor gltf buffers' accessorId)
+readBufferWithGet getter gltf buffers' accessorId =
+  maybe
+    mempty
+    (readFromBuffer undefined getter)
+    (bufferAccessor gltf buffers' accessorId)
 
 -- | Look up a Buffer from a GlTF and AccessorIx
 bufferAccessor
@@ -167,15 +174,16 @@ bufferAccessor GlTF{..} buffers' accessorId = do
   bufferView <- lookupBufferViewFromAccessor accessor =<< bufferViews
   buffer <- lookupBufferFromBufferView bufferView buffers'
 
-  let Accessor{byteOffset=offset, count=count, componentType=compTy} = accessor
-      BufferView{byteOffset=offset'} = bufferView
+  let Accessor{byteOffset = offset, count = count, componentType = compTy} = accessor
+      BufferView{byteOffset = offset'} = bufferView
 
-  return $ BufferAccessor
-    { componentType = compTy,
-      offset = offset + offset',
-      count = count,
-      buffer = buffer
-    }
+  return
+    $ BufferAccessor
+      { componentType = compTy,
+        offset = offset + offset',
+        count = count,
+        buffer = buffer
+      }
 
 -- | Look up a Buffer from a GlTF and BufferView
 bufferViewAccessor
@@ -187,19 +195,20 @@ bufferViewAccessor GlTF{..} buffers' bufferViewId = do
   bufferView <- lookupBufferView bufferViewId =<< bufferViews
   buffer <- lookupBufferFromBufferView bufferView buffers'
 
-  let BufferView{byteLength=length', byteOffset=offset'} = bufferView
+  let BufferView{byteLength = length', byteOffset = offset'} = bufferView
 
-  return $ BufferAccessor
-    { componentType = BYTE, -- There's no accessor, assume byte
-      offset = offset',
-      count = length',
-      buffer = buffer
-    }
+  return
+    $ BufferAccessor
+      { componentType = BYTE, -- There's no accessor, assume byte
+        offset = offset',
+        count = length',
+        buffer = buffer
+      }
 
 -- | Look up a BufferView by Accessor
 lookupBufferViewFromAccessor :: Accessor -> Vector BufferView -> Maybe BufferView
-lookupBufferViewFromAccessor Accessor{..} bufferViews
-  = bufferView >>= flip lookupBufferView bufferViews
+lookupBufferViewFromAccessor Accessor{..} bufferViews =
+  bufferView >>= flip lookupBufferView bufferViews
 
 -- | Look up a Buffer by BufferView
 lookupBufferFromBufferView :: BufferView -> Vector GltfBuffer -> Maybe GltfBuffer
@@ -224,12 +233,13 @@ readFromBuffer
   -> Get (Vector storable)
   -> BufferAccessor
   -> Vector storable
-readFromBuffer proxy getter accessor@BufferAccessor{..}
-  = runGet getter . fromStrict $ payload
-  where payload = readFromBufferRaw accessor len'
-        len' = count * sizeOf (asProxyTypeOf undefined proxy)
+readFromBuffer proxy getter accessor@BufferAccessor{..} =
+  runGet getter . fromStrict $ payload
+  where
+    payload = readFromBufferRaw accessor len'
+    len' = count * sizeOf (asProxyTypeOf undefined proxy)
 
 -- | Read from buffer without decoding
 readFromBufferRaw :: BufferAccessor -> Int -> ByteString
-readFromBufferRaw BufferAccessor{..} len'
-  = ByteString.take len' . ByteString.drop offset . unBuffer $ buffer
+readFromBufferRaw BufferAccessor{..} len' =
+  ByteString.take len' . ByteString.drop offset . unBuffer $ buffer

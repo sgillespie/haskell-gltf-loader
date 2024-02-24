@@ -43,7 +43,10 @@
 
         treefmt.config = {
           projectRootFile = "flake.nix";
-          programs.nixpkgs-fmt.enable = true;
+          programs = {
+            nixpkgs-fmt.enable = true;
+            fourmolu.enable = true;
+          };
         };
 
         packages.default = self'.packages.gltf-loader;
