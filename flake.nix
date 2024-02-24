@@ -38,8 +38,6 @@
               nixpkgs-fmt = pkgs.nixpkgs-fmt;
               hlint = hsPkgs.hlint;
             };
-
-            hlsCheck.enable = true;
           };
         };
 
