@@ -12,6 +12,7 @@ import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
 import qualified Codec.GlTF.Node as Node
+import qualified Codec.GlTF.Scene as Scene
 import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.URI as URI
 import qualified Data.HashMap.Strict as HashMap
@@ -87,6 +88,18 @@ spec = do
     it "Adapts empty nodes" $ do
       adaptNodes (Just []) `shouldBe` []
       adaptNodes Nothing `shouldBe` []
+
+  describe "adaptScenes" $ do
+    let scene = mkCodecScene
+        scene' = scene{Scene.name = Just "Other Scene"}
+
+    it "Adapts a list of scenes" $ do
+      adaptScenes (Just [scene, scene'])
+        `shouldBe` [loaderScene, set _sceneName (Just "Other Scene") loaderScene]
+
+    it "Adapts empty scenes" $ do
+      adaptScenes (Just []) `shouldBe` []
+      adaptScenes Nothing `shouldBe` []
 
   describe "adaptImage" $ do
     let codecImage =
@@ -171,6 +184,18 @@ spec = do
 
       adaptNode codecNodeNothing `shouldBe` nodeEmptyChildren
       adaptNode codecNodeEmpty `shouldBe` nodeEmptyChildren
+
+  describe "adaptScene" $ do
+    it "Adapts a basic node" $ do
+      adaptScene mkCodecScene `shouldBe` loaderScene
+
+    it "Adapts empty nodes" $ do
+      let sceneEmptyNode = set _sceneNodes [] loaderScene
+          codecSceneEmpty = mkCodecScene{Scene.nodes = Nothing}
+          codecSceneNothing = mkCodecScene{Scene.nodes = Just []}
+
+      adaptScene codecSceneEmpty `shouldBe` sceneEmptyNode
+      adaptScene codecSceneNothing `shouldBe` sceneEmptyNode
 
   describe "adaptTexture" $ do
     it "Adapts simple textures" $ do

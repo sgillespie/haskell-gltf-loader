@@ -59,16 +59,13 @@ fromFileTests file fromFile = do
 
     gltf' ^? _asset `shouldBe` Just expectedAsset
     gltf' ^?! _images `shouldSatisfy` \images ->
-      images
-        ^? _head
-          . _imageMimeType
-          == Just "image/png"
-          && images
-        ^? _head . _imageName == Just (Just "Untitled")
+      (images ^? _head . _imageMimeType == Just "image/png")
+        && (images ^? _head . _imageName == Just (Just "Untitled"))
     gltf' ^? _materials `shouldBe` Just expectedMaterials
     gltf' ^? _meshes `shouldBe` Just expectedMeshes
     gltf' ^? _nodes `shouldBe` Just expectedNodes
     gltf' ^? _samplers `shouldBe` Just expectedSamplers
+    gltf' ^? _scenes `shouldBe` Just expectedScenes
     gltf' ^? _textures `shouldBe` Just expectedTextures
 
 expectedAsset :: Asset
@@ -256,6 +253,14 @@ expectedSamplers =
         samplerName = Nothing,
         samplerWrapS = Repeat,
         samplerWrapT = Repeat
+      }
+  ]
+
+expectedScenes :: Vector Scene
+expectedScenes =
+  [ Scene
+      { sceneName = Just "Scene",
+        sceneNodes = [0]
       }
   ]
 
