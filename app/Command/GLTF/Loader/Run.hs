@@ -5,7 +5,7 @@ import Text.GLTF.Loader
 
 import Lens.Micro
 import Lens.Micro.Platform ()
-import Linear (V3 (..), V4 (..))
+import Linear (Quaternion (..), V3 (..), V4 (..))
 import Numeric
 import RIO
 import qualified RIO.Text as Text
@@ -41,6 +41,8 @@ reportError err =
 reportVerbose :: Gltf -> RIO App ()
 reportVerbose gltf = do
   reportAsset $ gltf ^. _asset
+  logInfo "" -- Blank line
+  reportScenes $ gltf ^. _scenes
 
   logInfo "" -- Blank line
   reportNodes gltf $ reportMeshVerbose gltf
@@ -48,6 +50,8 @@ reportVerbose gltf = do
 reportSummary :: Gltf -> RIO App ()
 reportSummary gltf = do
   reportAsset $ gltf ^. _asset
+  logInfo "" -- Blank line
+  reportScenes $ gltf ^. _scenes
 
   logInfo "" -- Blank line
   reportNodes gltf reportMeshSummary
@@ -55,6 +59,8 @@ reportSummary gltf = do
 reportGltf :: Gltf -> RIO App ()
 reportGltf gltf = do
   reportAsset $ gltf ^. _asset
+  logInfo "" -- Blank line
+  reportScenes $ gltf ^. _scenes
 
   logInfo "" -- Blank line
   reportNodes gltf $ reportMesh gltf
@@ -65,6 +71,14 @@ reportAsset asset = do
     ^. _assetGenerator . to (fromMaybe "Unknown") . to display
   logInfo $ "Version: " <> asset ^. _assetVersion . to display
 
+reportScenes :: Vector Scene -> RIO App ()
+reportScenes scenes = do
+  logInfo $ "Scenes: " <> display (RIO.length scenes)
+  forM_ scenes $ \scene -> do
+    logInfo $ "  Name: " <> maybe "Unknown scene" display (view _sceneName scene)
+    let nodes = Text.intercalate ", " $ map textDisplay $ toList (view _sceneNodes scene)
+    logInfo $ "  Nodes: " <> display nodes
+
 reportNodes :: Gltf -> (Mesh -> RIO App ()) -> RIO App ()
 reportNodes gltf meshReporter = do
   let nodes = gltf ^. _nodes
@@ -72,6 +86,16 @@ reportNodes gltf meshReporter = do
 
   forM_ nodes $ \node -> do
     logInfo $ "  Name: " <> maybe "Unknown node" display (view _nodeName node)
+
+    logInfo
+      $ "  Rotation: "
+      <> maybe "(1, 0, 0, 0)" displayQuaternion (view _nodeRotation node)
+    logInfo
+      $ "  Scale: "
+      <> maybe "(0, 0, 0)" displayV3 (view _nodeScale node)
+    logInfo
+      $ "  Translation: "
+      <> maybe "(0, 0, 0)" displayV3 (view _nodeTranslation node)
 
     forM_ (node ^. _nodeMeshId) $ \meshId -> do
       logInfo "  Mesh: "
@@ -171,6 +195,10 @@ displayV4 (V4 w x y z) =
     <> ", "
     <> display z
     <> ")"
+
+displayQuaternion :: Display a => Quaternion a -> Utf8Builder
+displayQuaternion (Quaternion e (V3 i j k)) =
+  displayV4 (V4 e i j k)
 
 newtype RoundedFloat = RoundedFloat {unFloat :: Float}
   deriving (Eq, Show)
