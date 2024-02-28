@@ -39,6 +39,7 @@ mkCodecGltf =
           [ mkCodecAccessorIndices,
             mkCodecAccessorPositions,
             mkCodecAccessorNormals,
+            mkCodecAccessorTangents,
             mkCodecAccessorTexCoords,
             mkCodecAccessorColors
           ],
@@ -48,6 +49,7 @@ mkCodecGltf =
           [ mkCodecBufferIndices,
             mkCodecBufferPositions,
             mkCodecBufferNormals,
+            mkCodecBufferTangents,
             mkCodecBufferTexCoords,
             mkCodecBufferColors,
             mkCodecBufferImage
@@ -57,6 +59,7 @@ mkCodecGltf =
           [ mkCodecBufferViewIndices,
             mkCodecBufferViewPositions,
             mkCodecBufferViewNormals,
+            mkCodecBufferViewTangents,
             mkCodecBufferViewTexCoords,
             mkCodecBufferViewColors,
             mkCodecBufferViewImage
@@ -153,10 +156,27 @@ mkCodecAccessorPositions =
       type' = Accessor.AttributeType "VEC2"
     }
 
+mkCodecAccessorTangents :: Accessor.Accessor
+mkCodecAccessorTangents =
+  Accessor.Accessor
+    { bufferView = Just $ BufferView.BufferViewIx 3,
+      byteOffset = 0,
+      componentType = Accessor.ComponentType 5126,
+      count = 4,
+      extensions = Nothing,
+      extras = Nothing,
+      max = Nothing,
+      min = Nothing,
+      name = Just "Accessor Tangents",
+      normalized = False,
+      sparse = Nothing,
+      type' = Accessor.AttributeType "VEC4"
+    }
+
 mkCodecAccessorTexCoords :: Accessor.Accessor
 mkCodecAccessorTexCoords =
   Accessor.Accessor
-    { bufferView = Just $ BufferView.BufferViewIx 3,
+    { bufferView = Just $ BufferView.BufferViewIx 4,
       byteOffset = 0,
       componentType = Accessor.ComponentType 5126,
       count = 4,
@@ -173,7 +193,7 @@ mkCodecAccessorTexCoords =
 mkCodecAccessorColors :: Accessor.Accessor
 mkCodecAccessorColors =
   Accessor.Accessor
-    { bufferView = Just $ BufferView.BufferViewIx 4,
+    { bufferView = Just $ BufferView.BufferViewIx 5,
       byteOffset = 0,
       componentType = Accessor.ComponentType 5123,
       count = 4,
@@ -226,10 +246,23 @@ mkCodecBufferViewPositions =
       extras = Nothing
     }
 
+mkCodecBufferViewTangents :: BufferView.BufferView
+mkCodecBufferViewTangents =
+  BufferView.BufferView
+    { buffer = Buffer.BufferIx 3,
+      byteOffset = 0,
+      byteLength = sizeOf (undefined :: V4 Float) * 4,
+      byteStride = Nothing,
+      target = Nothing,
+      name = Just "BufferView Tangents",
+      extensions = Nothing,
+      extras = Nothing
+    }
+
 mkCodecBufferViewTexCoords :: BufferView.BufferView
 mkCodecBufferViewTexCoords =
   BufferView.BufferView
-    { buffer = Buffer.BufferIx 3,
+    { buffer = Buffer.BufferIx 4,
       byteOffset = 0,
       byteLength = sizeOf (undefined :: V2 Float) * 4,
       byteStride = Nothing,
@@ -242,7 +275,7 @@ mkCodecBufferViewTexCoords =
 mkCodecBufferViewColors :: BufferView.BufferView
 mkCodecBufferViewColors =
   BufferView.BufferView
-    { buffer = Buffer.BufferIx 4,
+    { buffer = Buffer.BufferIx 5,
       byteOffset = 0,
       byteLength = sizeOf (undefined :: V4 Float) * 4,
       byteStride = Nothing,
@@ -255,7 +288,7 @@ mkCodecBufferViewColors =
 mkCodecBufferViewImage :: BufferView.BufferView
 mkCodecBufferViewImage =
   BufferView.BufferView
-    { buffer = Buffer.BufferIx 5,
+    { buffer = Buffer.BufferIx 6,
       byteOffset = 0,
       byteLength = length "imageData" * 4,
       byteStride = Nothing,
@@ -270,7 +303,7 @@ mkCodecImage =
   Image.Image
     { uri = Just (URI.URI "data:image/jpg;base64,aW1hZ2VQYXlsb2Fk"),
       mimeType = Just "image/png",
-      bufferView = Just $ BufferView.BufferViewIx 5,
+      bufferView = Just $ BufferView.BufferViewIx 6,
       name = Just "Image",
       extensions = Nothing,
       extras = Nothing
@@ -304,6 +337,16 @@ mkCodecBufferPositions =
       extensions = Nothing,
       extras = Nothing,
       name = Just "Buffer Positions"
+    }
+
+mkCodecBufferTangents :: Buffer.Buffer
+mkCodecBufferTangents =
+  Buffer.Buffer
+    { byteLength = sizeOf (undefined :: V4 Float) * 4,
+      uri = Just mkCodecBufferUriTangents,
+      extensions = Nothing,
+      extras = Nothing,
+      name = Just "Buffer Tangents"
     }
 
 mkCodecBufferTexCoords :: Buffer.Buffer
@@ -344,9 +387,9 @@ mkCodecMaterial =
       alphaMode = Material.OPAQUE,
       doubleSided = True,
       pbrMetallicRoughness = Just mkCodecPbrMetallicRoughness,
-      normalTexture = Nothing,
-      occlusionTexture = Nothing,
-      emissiveTexture = Nothing,
+      normalTexture = Just mkCodecNormalTexture,
+      occlusionTexture = Just mkCodecOcclusionTexture,
+      emissiveTexture = Just mkCodecEmissiveTexture,
       name = Just "Material",
       extensions = Nothing,
       extras = Nothing
@@ -368,7 +411,7 @@ mkCodecPbrMetallicRoughness =
     { baseColorFactor = (1.0, 2.0, 3.0, 4.0),
       metallicFactor = 1.0,
       roughnessFactor = 2.0,
-      metallicRoughnessTexture = Nothing,
+      metallicRoughnessTexture = Just mkCodecMetallicRoughnessTexture,
       baseColorTexture = Just mkCodecBaseColorTexture,
       extensions = Nothing,
       extras = Nothing
@@ -394,6 +437,13 @@ mkCodecBufferUriPositions = URI.URI uriText
     uriText = "data:application/octet-stream;base64," <> encodedText
     encodedText = encodeBase64 . toStrict . runPut $ putPositions
     putPositions = mapM_ (replicateM_ 3 . putFloatle) ([1 .. 4] :: [Float])
+
+mkCodecBufferUriTangents:: URI.URI
+mkCodecBufferUriTangents = URI.URI uriText
+  where
+    uriText = "data:application/octet-stream;base64," <> encodedText
+    encodedText = encodeBase64 . toStrict . runPut $ putPositions
+    putPositions = mapM_ (replicateM_ 4 . putFloatle) ([13 .. 16] :: [Float])
 
 mkCodecBufferUriTexCoords :: URI.URI
 mkCodecBufferUriTexCoords = URI.URI uriText
@@ -434,7 +484,8 @@ mkCodecMeshPrimitive =
         HashMap.fromList
           [ (attributePosition, Accessor.AccessorIx 1),
             (attributeNormal, Accessor.AccessorIx 2),
-            (attributeTexCoord, Accessor.AccessorIx 3)
+            (attributeTangent, Accessor.AccessorIx 3),
+            (attributeTexCoord, Accessor.AccessorIx 4)
           ],
       mode = Mesh.MeshPrimitiveMode 4,
       indices = Just $ Accessor.AccessorIx 0,
@@ -452,6 +503,46 @@ mkCodecBaseColorTexture =
       index = 15,
       subtype = TextureInfo.Basic,
       texCoord = 10
+    }
+
+mkCodecMetallicRoughnessTexture :: TextureInfo.TextureInfo_
+mkCodecMetallicRoughnessTexture =
+  TextureInfo.TextureInfo
+    { extensions = Nothing,
+      extras = Nothing,
+      index = 16,
+      subtype = TextureInfo.Basic,
+      texCoord = 11
+    }
+
+mkCodecEmissiveTexture :: TextureInfo.TextureInfo_
+mkCodecEmissiveTexture =
+  TextureInfo.TextureInfo
+    { extensions = Nothing,
+      extras = Nothing,
+      index = 17,
+      subtype = TextureInfo.Basic,
+      texCoord = 12
+    }
+
+mkCodecNormalTexture :: TextureInfo.TextureInfo Material.MaterialNormal
+mkCodecNormalTexture =
+  TextureInfo.TextureInfo
+    { extensions = Nothing,
+      extras = Nothing,
+      index = 18,
+      subtype = Material.MaterialNormal 1,
+      texCoord = 13
+    }
+
+mkCodecOcclusionTexture :: TextureInfo.TextureInfo Material.MaterialOcclusion
+mkCodecOcclusionTexture =
+  TextureInfo.TextureInfo
+    { extensions = Nothing,
+      extras = Nothing,
+      index = 19,
+      subtype = Material.MaterialOcclusion 2,
+      texCoord = 14
     }
 
 mkCodecNode :: Node.Node
