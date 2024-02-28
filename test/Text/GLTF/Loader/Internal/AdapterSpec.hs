@@ -106,7 +106,7 @@ spec = do
           Image.Image
             { uri = Nothing,
               mimeType = Just "text/jpg",
-              bufferView = Just $ BufferView.BufferViewIx 4,
+              bufferView = Just $ BufferView.BufferViewIx 6,
               name = Just "Image",
               extensions = Nothing,
               extras = Nothing
@@ -114,7 +114,7 @@ spec = do
 
     it "Adapts a BufferView image" $ do
       env' <- env
-      let image = ImageBufferView (BufferView.BufferViewIx 5)
+      let image = ImageBufferView (BufferView.BufferViewIx 6)
 
       runReader (adaptImage image codecImage) env'
         `shouldBe` Image
@@ -277,7 +277,7 @@ spec = do
               { Mesh.attributes =
                   HashMap.insert
                     attributeColors
-                    (Accessor.AccessorIx 4)
+                    (Accessor.AccessorIx 5)
                     (Mesh.attributes mkCodecMeshPrimitive)
               }
           loaderMeshPrimitive' = loaderMeshPrimitive & _meshPrimitiveColors .~ [0, 0.2, 0.6, 1]
@@ -347,7 +347,10 @@ loaderMaterial =
       materialAlphaMode = Opaque,
       materialDoubleSided = True,
       materialEmissiveFactor = V3 1.0 2.0 3.0,
+      materialEmissiveTexture = Just loaderEmissiveTexture,
       materialName = Just "Material",
+      materialNormalTexture = Just loaderNormalTexture,
+      materialOcclusionTexture = Just loaderOcclusionTexture,
       materialPbrMetallicRoughness = Just loaderPbrMetallicRoughness
     }
 
@@ -402,6 +405,7 @@ loaderPbrMetallicRoughness =
     { pbrBaseColorFactor = V4 1.0 2.0 3.0 4.0,
       pbrBaseColorTexture = Just loaderBaseColorTexture,
       pbrMetallicFactor = 1.0,
+      pbrMetallicRoughnessTexture = Just loaderMetallicRoughnessTexture,
       pbrRoughnessFactor = 2.0
     }
 
@@ -413,6 +417,7 @@ loaderMeshPrimitive =
       meshPrimitiveMode = Triangles,
       meshPrimitiveNormals = fmap (\x -> V3 x x x) [5 .. 8],
       meshPrimitivePositions = fmap (\x -> V3 x x x) [1 .. 4],
+      meshPrimitiveTangents = fmap (\x -> V4 x x x x) [13 .. 16],
       meshPrimitiveTexCoords = fmap (\x -> V2 x x) [9 .. 12],
       meshPrimitiveColors = []
     }
@@ -422,4 +427,34 @@ loaderBaseColorTexture =
   TextureInfo
     { textureId = 15,
       textureTexCoord = 10
+    }
+
+loaderMetallicRoughnessTexture :: TextureInfo
+loaderMetallicRoughnessTexture =
+  TextureInfo
+    { textureId = 16,
+      textureTexCoord = 11
+    }
+
+loaderEmissiveTexture :: TextureInfo
+loaderEmissiveTexture =
+  TextureInfo
+    { textureId = 17,
+      textureTexCoord = 12
+    }
+
+loaderNormalTexture :: NormalTextureInfo
+loaderNormalTexture =
+  NormalTextureInfo
+    { normalTextureId = 18,
+      normalTextureTexCoord = 13,
+      normalTextureScale = 1
+    }
+
+loaderOcclusionTexture :: OcclusionTextureInfo
+loaderOcclusionTexture =
+  OcclusionTextureInfo
+    { occlusionTextureId = 19,
+      occlusionTextureTexCoord = 14,
+      occlusionTextureStrength = 2
     }
