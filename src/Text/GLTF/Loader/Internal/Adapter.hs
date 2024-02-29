@@ -7,6 +7,7 @@ module Text.GLTF.Loader.Internal.Adapter
     runAdapter,
     adaptGltf,
     adaptAsset,
+    adaptAnimations,
     adaptImages,
     adaptMaterials,
     adaptMeshes,
@@ -32,6 +33,7 @@ import Text.GLTF.Loader.Internal.MonadAdapter
 
 import qualified Codec.GlTF as GlTF
 import qualified Codec.GlTF.Asset as Asset
+import qualified Codec.GlTF.Animation as Animation
 import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
@@ -73,12 +75,14 @@ adaptGltf :: Adapter Gltf
 adaptGltf = do
   GlTF.GlTF{..} <- getGltf
 
+  gltfAnimations <- adaptAnimations animations
   gltfImages <- adaptImages images
   gltfMeshes <- adaptMeshes meshes
 
   return
     $ Gltf
       { gltfAsset = adaptAsset asset,
+        gltfAnimations = gltfAnimations,
         gltfImages = gltfImages,
         gltfMaterials = adaptMaterials materials,
         gltfMeshes = gltfMeshes,
@@ -96,6 +100,51 @@ adaptAsset Asset.Asset{..} =
       assetGenerator = generator,
       assetMinVersion = minVersion
     }
+
+adaptAnimations
+  :: Maybe (Vector Animation.Animation)
+  -> Adapter (Vector Animation)
+adaptAnimations = maybe (return mempty) (mapM adaptAnimation)
+
+adaptAnimation :: Animation.Animation -> Adapter Animation
+adaptAnimation Animation.Animation{..} = do
+  gltfChannels <- mapM (adaptAnimationChannel samplers) channels
+  return
+    $ Animation
+      { animationChannels = gltfChannels,
+        animationName = name
+      }
+
+adaptAnimationChannel
+  :: Vector Animation.AnimationSampler
+  -> Animation.AnimationChannel
+  -> Adapter Channel
+adaptAnimationChannel samplers Animation.AnimationChannel{..} = do
+  gltf <- getGltf
+  buffers <- getBuffers
+  let Animation.AnimationSampler{ input, interpolation, output } =
+        samplers ! Animation.unAnimationSamplerIx sampler
+      Animation.AnimationChannelTarget{ node, path } = target
+      outputs = case path of
+        Animation.ROTATION -> Rotation $ animationSamplerRotationOutputs gltf buffers output
+        Animation.SCALE -> Scale $ animationSamplerScaleOutputs gltf buffers output
+        Animation.TRANSLATION -> Translation $ animationSamplerTranslationOutputs gltf buffers output
+        Animation.WEIGHTS -> MorphTargetWeights $ animationSamplerWeightsOutputs gltf buffers output
+        _ -> error $ "Invalid Channel path: " <> show path
+  return
+    $ Channel
+      { channelTargetNode = fmap Node.unNodeIx node,
+        channelSamplerInterpolation = adaptInterpolation interpolation,
+        channelSamplerInputs = animationSamplerInputs gltf buffers input,
+        channelSamplerOutputs = outputs
+      }
+
+adaptInterpolation :: Animation.AnimationSamplerInterpolation -> ChannelSamplerInterpolation
+adaptInterpolation Animation.CUBICSPLINE = CubicSpline
+adaptInterpolation Animation.LINEAR = Linear
+adaptInterpolation Animation.STEP = Step
+adaptInterpolation (Animation.AnimationSamplerInterpolation interpolation) =
+  error $ "Invalid ChannelSamplerInterpolation: " <> show interpolation
 
 adaptImages :: Maybe (Vector Image.Image) -> Adapter (Vector Image)
 adaptImages codecImages = do

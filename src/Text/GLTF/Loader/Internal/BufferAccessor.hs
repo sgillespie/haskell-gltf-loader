@@ -7,6 +7,11 @@ module Text.GLTF.Loader.Internal.BufferAccessor
     loadImages,
 
     -- * Deserializing Accessors
+    animationSamplerInputs,
+    animationSamplerRotationOutputs,
+    animationSamplerScaleOutputs,
+    animationSamplerTranslationOutputs,
+    animationSamplerWeightsOutputs,
     vertexIndices,
     vertexPositions,
     vertexNormals,
@@ -86,6 +91,35 @@ loadImages GlTF{images = images} basePath = do
   Vector.forM images' $ \Image{..} -> do
     let fallbackImageData = return $ maybe NoImageData ImageBufferView bufferView
     maybe fallbackImageData (fmap ImageData . loadUri' basePath) uri
+
+animationSamplerInputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Float
+animationSamplerInputs = readBufferWithGet (getScalar getFloat)
+
+animationSamplerRotationOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (Quaternion Float)
+animationSamplerRotationOutputs gltf buffers' accessorId =
+  fromMaybe (error "Invalid animation sampler output component type.") $ do
+    buffer@BufferAccessor{componentType = componentType} <-
+      bufferAccessor gltf buffers' accessorId
+
+    case componentType of
+      FLOAT -> Just . readFromBuffer (Proxy @(Quaternion Float)) (getQuaternion getFloat) $ buffer
+      _ -> Nothing
+
+animationSamplerScaleOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
+animationSamplerScaleOutputs = readBufferWithGet (getVec3 getFloat)
+
+animationSamplerTranslationOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
+animationSamplerTranslationOutputs = readBufferWithGet (getVec3 getFloat)
+
+animationSamplerWeightsOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Float
+animationSamplerWeightsOutputs gltf buffers' accessorId =
+  fromMaybe (error "Invalid animation sampler output component type.") $ do
+    buffer@BufferAccessor{componentType = componentType} <-
+      bufferAccessor gltf buffers' accessorId
+
+    case componentType of
+      FLOAT -> Just . readFromBuffer (Proxy @Float) (getScalar getFloat) $ buffer
+      _ -> Nothing
 
 -- | Decode vertex indices
 vertexIndices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Word32
