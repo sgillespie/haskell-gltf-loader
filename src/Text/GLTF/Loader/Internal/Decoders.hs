@@ -15,6 +15,7 @@ module Text.GLTF.Loader.Internal.Decoders
     getMat2,
     getMat3,
     getMat4,
+    getQuaternion,
 
     -- * GLTF Component Type decoders
     getByte,
@@ -96,6 +97,14 @@ getMat4 getter =
     <*> (V4 <$> getter <*> getter <*> getter <*> getter)
     <*> (V4 <$> getter <*> getter <*> getter <*> getter)
     <*> (V4 <$> getter <*> getter <*> getter <*> getter)
+
+-- | Quaternion binary decoder
+getQuaternion :: Get a -> Get (Vector (Quaternion a))
+getQuaternion getter = getVector $ do
+  v3 <- V3 <$> getter <*> getter <*> getter
+  Quaternion
+    <$> getter
+    <*> pure v3
 
 -- | Byte binary decoder
 getByte :: Get Int8
