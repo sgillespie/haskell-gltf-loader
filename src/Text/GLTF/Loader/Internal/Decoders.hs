@@ -6,6 +6,12 @@ module Text.GLTF.Loader.Internal.Decoders
     getNormals,
     getTexCoords,
     getColors,
+    getJoints,
+    getJoints16,
+    getWeights,
+    getWeights8,
+    getWeights16,
+    getInverseBindMatrices,
 
     -- * GLTF Accessor Type decoders
     getScalar,
@@ -53,6 +59,30 @@ getTexCoords = getVec2 getFloat
 -- | Vertex colors binary decoder
 getColors :: Get (Vector (V4 Word16))
 getColors = getVec4 getUnsignedShort
+
+-- | Vertex joints binary decoder, for unsigned bytes
+getJoints :: Get (Vector (V4 Word8))
+getJoints = getVec4 getUnsignedByte
+
+-- | Vertex joints binary decoder, for unsigned shorts
+getJoints16 :: Get (Vector (V4 Word16))
+getJoints16 = getVec4 getUnsignedShort
+
+-- | Vertex joint weights binary decoder, for floats
+getWeights :: Get (Vector (V4 Float))
+getWeights = getVec4 getFloat
+
+-- | Vertex weights binary decoder, for unsigned bytes
+getWeights8 :: Get (Vector (V4 Word8))
+getWeights8 = getVec4 getUnsignedByte
+
+-- | Vertex weights binary decoder, for unsigned shorts
+getWeights16 :: Get (Vector (V4 Word16))
+getWeights16 = getVec4 getUnsignedShort
+
+-- | Inverse bind matrix decoder
+getInverseBindMatrices :: Get (Vector (M44 Float))
+getInverseBindMatrices = getMat4 getFloat
 
 -- | Scalar (simple) type binary decoder
 getScalar :: Get a -> Get (Vector a)

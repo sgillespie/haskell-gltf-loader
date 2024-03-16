@@ -12,14 +12,18 @@ module Text.GLTF.Loader.Internal.BufferAccessor
     vertexNormals,
     vertexTexCoords,
     vertexColors,
+    vertexJoints,
+    vertexWeights,
+    inverseBindMatrices,
     imageDataRaw,
   ) where
 
 import Text.GLTF.Loader.Internal.Decoders
+import Prelude (max)
 
 import Codec.GLB (Chunk (..))
 import Codec.GlTF
-import Codec.GlTF.Accessor
+import Codec.GlTF.Accessor hiding (max)
 import Codec.GlTF.Buffer
 import Codec.GlTF.BufferView
 import Codec.GlTF.Image
@@ -51,6 +55,23 @@ data BufferAccessor = BufferAccessor
     count :: Int,
     buffer :: GltfBuffer
   }
+
+-- | Calculates fractional values from normalized integer types
+class Real a => Normalized a where
+  denormalize :: (Fractional b, Ord b) => a -> b
+
+instance Normalized Word8 where
+  denormalize = (flip (/) `on` realToFrac) maxBound
+
+instance Normalized Word16 where
+  denormalize = (flip (/) `on` realToFrac) maxBound
+
+instance Normalized Int8 where
+  denormalize = max (-1) . (flip (/) `on` realToFrac) maxBound
+
+instance Normalized Int16 where
+  denormalize = max (-1) . (flip (/) `on` realToFrac) maxBound
+
 
 -- | Read all the buffers into memory
 loadBuffers
@@ -116,6 +137,38 @@ vertexTexCoords = readBufferWithGet getTexCoords
 -- | Decode vertex colors
 vertexColors :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V4 Word16)
 vertexColors = readBufferWithGet getColors
+
+-- | Decode vertex joints
+vertexJoints :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V4 Word16)
+vertexJoints gltf buffers' accessorId =
+  fromMaybe mempty $ do
+    buffer@BufferAccessor{componentType = componentType} <-
+      bufferAccessor gltf buffers' accessorId
+
+    case componentType of
+      UNSIGNED_SHORT ->
+        Just (readFromBuffer (Proxy @(V4 Word16)) getJoints16 buffer)
+      UNSIGNED_BYTE ->
+        Just (fmap fromIntegral <$> readFromBuffer (Proxy @(V4 Word8)) getJoints buffer)
+      _ -> Nothing
+
+-- | Decode vertex weights
+vertexWeights :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V4 Float)
+vertexWeights gltf buffers' accessorId =
+  fromMaybe mempty $ do
+    buffer@BufferAccessor{componentType = componentType} <-
+      bufferAccessor gltf buffers' accessorId
+
+    case componentType of
+      UNSIGNED_SHORT ->
+        Just (fmap denormalize <$> readFromBuffer (Proxy @(V4 Word16)) getWeights16 buffer)
+      UNSIGNED_BYTE ->
+        Just (fmap denormalize <$> readFromBuffer (Proxy @(V4 Word8)) getWeights8 buffer)
+      FLOAT -> Just (readFromBuffer (Proxy @(V4 Float)) getWeights buffer)
+      _ -> Nothing
+
+inverseBindMatrices :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (M44 Float)
+inverseBindMatrices = readBufferWithGet getInverseBindMatrices
 
 -- | Read an image from a buffer view
 imageDataRaw :: GlTF -> Vector GltfBuffer -> BufferViewIx -> Maybe ByteString
