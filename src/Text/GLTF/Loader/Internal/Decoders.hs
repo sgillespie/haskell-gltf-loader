@@ -73,29 +73,41 @@ getVec4 getter = getVector $ V4 <$> getter <*> getter <*> getter <*> getter
 -- | 2x2 Matrix binary decoder
 getMat2 :: Get a -> Get (Vector (M22 a))
 getMat2 getter =
-  getVector
-    $ V2
-    <$> (V2 <$> getter <*> getter)
-    <*> (V2 <$> getter <*> getter)
+  getVector $ do {
+    m11 <- getter; m12 <- getter;
+    m21 <- getter; m22 <- getter;
+    return $ V2
+      (V2 m11 m21)
+      (V2 m12 m22)
+  }
 
 -- | 3x3 Matrix binary decoder
 getMat3 :: Get a -> Get (Vector (M33 a))
 getMat3 getter =
-  getVector
-    $ V3
-    <$> (V3 <$> getter <*> getter <*> getter)
-    <*> (V3 <$> getter <*> getter <*> getter)
-    <*> (V3 <$> getter <*> getter <*> getter)
+  getVector $ do {
+    m11 <- getter; m12 <- getter; m13 <- getter;
+    m21 <- getter; m22 <- getter; m23 <- getter;
+    m31 <- getter; m32 <- getter; m33 <- getter;
+    return $ V3
+      (V3 m11 m21 m31)
+      (V3 m12 m22 m32)
+      (V3 m13 m23 m33)
+  }
 
 -- | 4x4 Matrix binary decoder
 getMat4 :: Get a -> Get (Vector (M44 a))
 getMat4 getter =
-  getVector
-    $ V4
-    <$> (V4 <$> getter <*> getter <*> getter <*> getter)
-    <*> (V4 <$> getter <*> getter <*> getter <*> getter)
-    <*> (V4 <$> getter <*> getter <*> getter <*> getter)
-    <*> (V4 <$> getter <*> getter <*> getter <*> getter)
+  getVector $ do {
+    m11 <- getter; m12 <- getter; m13 <- getter; m14 <- getter;
+    m21 <- getter; m22 <- getter; m23 <- getter; m24 <- getter;
+    m31 <- getter; m32 <- getter; m33 <- getter; m34 <- getter;
+    m41 <- getter; m42 <- getter; m43 <- getter; m44 <- getter;
+    return $ V4
+      (V4 m11 m21 m31 m41)
+      (V4 m12 m22 m32 m42)
+      (V4 m13 m23 m33 m43)
+      (V4 m14 m24 m34 m44)
+  }
 
 -- | Byte binary decoder
 getByte :: Get Int8
