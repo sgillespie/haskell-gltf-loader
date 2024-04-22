@@ -74,6 +74,7 @@ common shared
         -Widentities
         -Wincomplete-record-updates
         -Wincomplete-uni-patterns
+        -Wno-unrecognised-pragmas
         -Wpartial-fields
         -Wredundant-constraints
     build-depends:
