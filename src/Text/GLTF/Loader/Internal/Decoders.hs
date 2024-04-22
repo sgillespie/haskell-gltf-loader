@@ -1,3 +1,5 @@
+{-# HLINT ignore "Use <$>" #-}
+
 module Text.GLTF.Loader.Internal.Decoders
   ( -- * GLTF Property-specific Type decoders
     getIndices,
