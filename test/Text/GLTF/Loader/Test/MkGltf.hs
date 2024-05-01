@@ -438,7 +438,7 @@ mkCodecBufferUriPositions = URI.URI uriText
     encodedText = encodeBase64 . toStrict . runPut $ putPositions
     putPositions = mapM_ (replicateM_ 3 . putFloatle) ([1 .. 4] :: [Float])
 
-mkCodecBufferUriTangents:: URI.URI
+mkCodecBufferUriTangents :: URI.URI
 mkCodecBufferUriTangents = URI.URI uriText
   where
     uriText = "data:application/octet-stream;base64," <> encodedText

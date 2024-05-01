@@ -157,8 +157,9 @@ adaptMaterial Material.Material{..} =
       materialName = name,
       materialNormalTexture = adaptNormalTextureInfo <$> normalTexture,
       materialOcclusionTexture = adaptOcclusionTextureInfo <$> occlusionTexture,
-      materialPbrMetallicRoughness = adaptPbrMetallicRoughness
-                                       <$> pbrMetallicRoughness
+      materialPbrMetallicRoughness =
+        adaptPbrMetallicRoughness
+          <$> pbrMetallicRoughness
     }
 
 adaptMesh :: Mesh.Mesh -> Adapter Mesh
@@ -232,8 +233,9 @@ adaptPbrMetallicRoughness PbrMetallicRoughness.PbrMetallicRoughness{..} =
       pbrBaseColorTexture = adaptTextureInfo <$> baseColorTexture,
       pbrMetallicFactor = metallicFactor,
       pbrRoughnessFactor = roughnessFactor,
-      pbrMetallicRoughnessTexture = adaptTextureInfo
-                                      <$> metallicRoughnessTexture
+      pbrMetallicRoughnessTexture =
+        adaptTextureInfo
+          <$> metallicRoughnessTexture
     }
 
 adaptMeshPrimitives :: Vector Mesh.MeshPrimitive -> Adapter (Vector MeshPrimitive)
@@ -272,10 +274,10 @@ adaptNormalTextureInfo
 adaptNormalTextureInfo TextureInfo.TextureInfo{..} =
   let Material.MaterialNormal{..} = subtype
   in NormalTextureInfo
-     { normalTextureId = index,
-       normalTextureTexCoord = texCoord,
-       normalTextureScale = scale
-     }
+      { normalTextureId = index,
+        normalTextureTexCoord = texCoord,
+        normalTextureScale = scale
+      }
 
 adaptOcclusionTextureInfo
   :: TextureInfo.TextureInfo Material.MaterialOcclusion
@@ -283,10 +285,10 @@ adaptOcclusionTextureInfo
 adaptOcclusionTextureInfo TextureInfo.TextureInfo{..} =
   let Material.MaterialOcclusion{..} = subtype
   in OcclusionTextureInfo
-     { occlusionTextureId = index,
-       occlusionTextureTexCoord = texCoord,
-       occlusionTextureStrength = strength
-     }
+      { occlusionTextureId = index,
+        occlusionTextureTexCoord = texCoord,
+        occlusionTextureStrength = strength
+      }
 
 adaptMeshPrimitive :: Mesh.MeshPrimitive -> Adapter MeshPrimitive
 adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
