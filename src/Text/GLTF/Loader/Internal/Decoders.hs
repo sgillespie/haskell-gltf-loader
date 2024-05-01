@@ -77,6 +77,9 @@ getVec3 getter = getVector $ V3 <$> getter <*> getter <*> getter
 getVec4 :: Get a -> Get (Vector (V4 a))
 getVec4 getter = getVector $ V4 <$> getter <*> getter <*> getter <*> getter
 
+-- The `getMat*` functions below use a style not recognized by Fourmolu
+{- FOURMOLU_DISABLE -}
+
 -- | 2x2 Matrix binary decoder
 getMat2 :: Get a -> Get (Vector (M22 a))
 getMat2 getter =
@@ -115,6 +118,8 @@ getMat4 getter =
       (V4 m13 m23 m33 m43)
       (V4 m14 m24 m34 m44)
   }
+
+{- FOURMOLU_DISABLE -}
 
 -- | Byte binary decoder
 getByte :: Get Int8
