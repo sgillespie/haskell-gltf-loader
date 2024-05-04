@@ -2,6 +2,7 @@
 module Text.GLTF.Loader.Internal.Adapter
   ( attributePosition,
     attributeNormal,
+    attributeTangent,
     attributeTexCoord,
     attributeColors,
     runAdapter,
@@ -55,6 +56,9 @@ attributePosition = "POSITION"
 
 attributeNormal :: Text
 attributeNormal = "NORMAL"
+
+attributeTangent :: Text
+attributeTangent = "TANGENT"
 
 attributeTexCoord :: Text
 attributeTexCoord = "TEXCOORD_0"
@@ -198,8 +202,13 @@ adaptMaterial Material.Material{..} =
       materialAlphaMode = adaptAlphaMode alphaMode,
       materialDoubleSided = doubleSided,
       materialEmissiveFactor = toV3 emissiveFactor,
+      materialEmissiveTexture = adaptTextureInfo <$> emissiveTexture,
       materialName = name,
-      materialPbrMetallicRoughness = adaptPbrMetallicRoughness <$> pbrMetallicRoughness
+      materialNormalTexture = adaptNormalTextureInfo <$> normalTexture,
+      materialOcclusionTexture = adaptOcclusionTextureInfo <$> occlusionTexture,
+      materialPbrMetallicRoughness =
+        adaptPbrMetallicRoughness
+          <$> pbrMetallicRoughness
     }
 
 adaptMesh :: Mesh.Mesh -> Adapter Mesh
@@ -272,7 +281,10 @@ adaptPbrMetallicRoughness PbrMetallicRoughness.PbrMetallicRoughness{..} =
     { pbrBaseColorFactor = toV4 baseColorFactor,
       pbrBaseColorTexture = adaptTextureInfo <$> baseColorTexture,
       pbrMetallicFactor = metallicFactor,
-      pbrRoughnessFactor = roughnessFactor
+      pbrRoughnessFactor = roughnessFactor,
+      pbrMetallicRoughnessTexture =
+        adaptTextureInfo
+          <$> metallicRoughnessTexture
     }
 
 adaptMeshPrimitives :: Vector Mesh.MeshPrimitive -> Adapter (Vector MeshPrimitive)
@@ -298,12 +310,34 @@ adaptSamplerWrap Sampler.MIRRORED_REPEAT = MirroredRepeat
 adaptSamplerWrap Sampler.REPEAT = Repeat
 adaptSamplerWrap mode = error $ "Invalid SamplerWrap: " <> show mode
 
-adaptTextureInfo :: TextureInfo.TextureInfo a -> TextureInfo
+adaptTextureInfo :: TextureInfo.TextureInfo_ -> TextureInfo
 adaptTextureInfo TextureInfo.TextureInfo{..} =
   TextureInfo
     { textureId = index,
       textureTexCoord = texCoord
     }
+
+adaptNormalTextureInfo
+  :: TextureInfo.TextureInfo Material.MaterialNormal
+  -> NormalTextureInfo
+adaptNormalTextureInfo TextureInfo.TextureInfo{..} =
+  let Material.MaterialNormal{..} = subtype
+  in NormalTextureInfo
+      { normalTextureId = index,
+        normalTextureTexCoord = texCoord,
+        normalTextureScale = scale
+      }
+
+adaptOcclusionTextureInfo
+  :: TextureInfo.TextureInfo Material.MaterialOcclusion
+  -> OcclusionTextureInfo
+adaptOcclusionTextureInfo TextureInfo.TextureInfo{..} =
+  let Material.MaterialOcclusion{..} = subtype
+  in OcclusionTextureInfo
+      { occlusionTextureId = index,
+        occlusionTextureTexCoord = texCoord,
+        occlusionTextureStrength = strength
+      }
 
 adaptMeshPrimitive :: Mesh.MeshPrimitive -> Adapter MeshPrimitive
 adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
@@ -317,6 +351,7 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
         meshPrimitiveMode = adaptMeshPrimitiveMode mode,
         meshPrimitiveNormals = maybe mempty (vertexNormals gltf buffers') normals,
         meshPrimitivePositions = maybe mempty (vertexPositions gltf buffers') positions,
+        meshPrimitiveTangents = maybe mempty (vertexTangents gltf buffers') tangents,
         meshPrimitiveTexCoords = maybe mempty (vertexTexCoords gltf buffers') texCoords,
         meshPrimitiveColors =
           maybe mempty (fmap (mapV4 toRatio) . vertexColors gltf buffers') colors
@@ -324,6 +359,7 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
   where
     positions = attributes HashMap.!? attributePosition
     normals = attributes HashMap.!? attributeNormal
+    tangents = attributes HashMap.!? attributeTangent
     texCoords = attributes HashMap.!? attributeTexCoord
     colors = attributes HashMap.!? attributeColors
     toRatio w = fromIntegral w / fromIntegral (maxBound :: Word16)

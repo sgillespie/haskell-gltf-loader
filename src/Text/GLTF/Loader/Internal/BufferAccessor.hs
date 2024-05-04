@@ -16,6 +16,7 @@ module Text.GLTF.Loader.Internal.BufferAccessor
     vertexPositions,
     vertexNormals,
     vertexTexCoords,
+    vertexTangents,
     vertexColors,
     imageDataRaw,
   ) where
@@ -142,6 +143,10 @@ vertexPositions = readBufferWithGet getPositions
 -- | Decode vertex normals
 vertexNormals :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 vertexNormals = readBufferWithGet getNormals
+
+-- | Decode vertex tangents
+vertexTangents :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V4 Float)
+vertexTangents = readBufferWithGet getTangents
 
 -- | Decode texture coordinates. Note that we only use the first one.
 vertexTexCoords :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V2 Float)

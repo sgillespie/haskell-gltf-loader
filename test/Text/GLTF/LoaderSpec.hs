@@ -84,7 +84,10 @@ expectedMaterials =
         materialAlphaMode = Opaque,
         materialDoubleSided = True,
         materialEmissiveFactor = V3 0.0 0.0 0.0,
+        materialEmissiveTexture = Nothing,
         materialName = Just "Material",
+        materialNormalTexture = Nothing,
+        materialOcclusionTexture = Nothing,
         materialPbrMetallicRoughness =
           Just
             $ PbrMetallicRoughness
@@ -96,6 +99,7 @@ expectedMaterials =
                         textureTexCoord = 0
                       },
                 pbrMetallicFactor = 0.0,
+                pbrMetallicRoughnessTexture = Nothing,
                 pbrRoughnessFactor = 0.5
               }
       }
@@ -198,6 +202,7 @@ expectedMeshes =
                     V3 0.0 (-1.0) (-0.0),
                     V3 0.0 0.0 1.0
                   ],
+                meshPrimitiveTangents = [],
                 meshPrimitiveTexCoords =
                   [ V2 0.625 0.5,
                     V2 0.625 0.5,
