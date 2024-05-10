@@ -320,7 +320,8 @@ loaderGltf =
       gltfNodes = [loaderNode],
       gltfSamplers = [loaderSampler],
       gltfScenes = [loaderScene],
-      gltfTextures = [loaderTexture]
+      gltfTextures = [loaderTexture],
+      gltfAnimations = []
     }
 
 loaderAsset :: Asset
