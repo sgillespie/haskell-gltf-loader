@@ -96,7 +96,8 @@ loadImages GlTF{images = images} basePath = do
 animationSamplerInputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Float
 animationSamplerInputs = readBufferWithGet (getScalar getFloat)
 
-animationSamplerRotationOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (Quaternion Float)
+animationSamplerRotationOutputs
+  :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (Quaternion Float)
 animationSamplerRotationOutputs gltf buffers' accessorId =
   fromMaybe (error "Invalid animation sampler output component type.") $ do
     buffer@BufferAccessor{componentType = componentType} <-
@@ -106,10 +107,12 @@ animationSamplerRotationOutputs gltf buffers' accessorId =
       FLOAT -> Just . readFromBuffer (Proxy @(Quaternion Float)) (getQuaternion getFloat) $ buffer
       _ -> Nothing
 
-animationSamplerScaleOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
+animationSamplerScaleOutputs
+  :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 animationSamplerScaleOutputs = readBufferWithGet (getVec3 getFloat)
 
-animationSamplerTranslationOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
+animationSamplerTranslationOutputs
+  :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector (V3 Float)
 animationSamplerTranslationOutputs = readBufferWithGet (getVec3 getFloat)
 
 animationSamplerWeightsOutputs :: GlTF -> Vector GltfBuffer -> AccessorIx -> Vector Float

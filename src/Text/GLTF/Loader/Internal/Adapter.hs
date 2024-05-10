@@ -33,8 +33,8 @@ import Text.GLTF.Loader.Internal.BufferAccessor
 import Text.GLTF.Loader.Internal.MonadAdapter
 
 import qualified Codec.GlTF as GlTF
-import qualified Codec.GlTF.Asset as Asset
 import qualified Codec.GlTF.Animation as Animation
+import qualified Codec.GlTF.Asset as Asset
 import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.Material as Material
 import qualified Codec.GlTF.Mesh as Mesh
@@ -126,9 +126,9 @@ adaptAnimationChannel
 adaptAnimationChannel samplers Animation.AnimationChannel{..} = do
   gltf <- getGltf
   buffers <- getBuffers
-  let Animation.AnimationSampler{ input, interpolation, output } =
+  let Animation.AnimationSampler{input, interpolation, output} =
         samplers ! Animation.unAnimationSamplerIx sampler
-      Animation.AnimationChannelTarget{ node, path } = target
+      Animation.AnimationChannelTarget{node, path} = target
       outputs = case path of
         Animation.ROTATION -> Rotation $ animationSamplerRotationOutputs gltf buffers output
         Animation.SCALE -> Scale $ animationSamplerScaleOutputs gltf buffers output
@@ -143,7 +143,8 @@ adaptAnimationChannel samplers Animation.AnimationChannel{..} = do
         channelSamplerOutputs = outputs
       }
 
-adaptInterpolation :: Animation.AnimationSamplerInterpolation -> ChannelSamplerInterpolation
+adaptInterpolation
+  :: Animation.AnimationSamplerInterpolation -> ChannelSamplerInterpolation
 adaptInterpolation Animation.CUBICSPLINE = CubicSpline
 adaptInterpolation Animation.LINEAR = Linear
 adaptInterpolation Animation.STEP = Step
