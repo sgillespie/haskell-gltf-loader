@@ -2,6 +2,10 @@ module Text.GLTF.Loader.Gltf
   ( -- * Data constructors
     Gltf (..),
     Asset (..),
+    Animation (..),
+    Channel (..),
+    ChannelSamplerInterpolation (..),
+    ChannelSamplerOutput (..),
     Image (..),
     MagFilter (..),
     MinFilter (..),
@@ -106,6 +110,7 @@ import RIO
 -- | The root data type for a glTF asset
 data Gltf = Gltf
   { gltfAsset :: Asset,
+    gltfAnimations :: Vector Animation,
     gltfImages :: Vector Image,
     gltfMaterials :: Vector Material,
     gltfMeshes :: Vector Mesh,
@@ -126,6 +131,16 @@ data Asset = Asset
     assetGenerator :: Maybe Text,
     -- | The minimum glTF version that this asset targets
     assetMinVersion :: Maybe Text
+  }
+  deriving (Eq, Show)
+
+-- | Keyframe animations for tranforming and morphing scene nodes
+data Animation = Animation
+  { -- | Defines the animation keyframes for up to one of each from translation
+    -- , rotation, scale and morph weights.
+    animationChannels :: Vector Channel,
+    -- | The user-defined name of this object.
+    animationName :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -318,6 +333,32 @@ data TextureInfo = TextureInfo
     -- (e.g. a value of 0 corresponds to TEXCOORD_0).
     textureTexCoord :: Int
   }
+  deriving (Eq, Show)
+
+data Channel = Channel
+  { -- | The target node to apply this channel of the animation to.
+    channelTargetNode :: Maybe Int,
+    -- | The interpolation to use for inputs between each animation keyframe
+    -- sample.
+    channelSamplerInterpolation :: ChannelSamplerInterpolation,
+    -- | The timestamps of each of the animation's keyframes.
+    channelSamplerInputs :: Vector Float,
+    -- | The values representing the animated property of each keyframe.
+    channelSamplerOutputs :: ChannelSamplerOutput
+  }
+  deriving (Eq, Show)
+
+data ChannelSamplerOutput
+  = MorphTargetWeights (Vector Float)
+  | Rotation (Vector (Quaternion Float))
+  | Scale (Vector (V3 Float))
+  | Translation (Vector (V3 Float))
+  deriving (Eq, Show)
+
+data ChannelSamplerInterpolation
+  = CubicSpline
+  | Linear
+  | Step
   deriving (Eq, Show)
 
 -- | Reference to a normal map texture
