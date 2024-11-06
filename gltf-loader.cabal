@@ -79,9 +79,9 @@ common shared
         -Wredundant-constraints
     build-depends:
         base >=4.14.0 && <5,
-        linear ^>=1.22,
-        microlens ^>=0.4.13,
-        microlens-platform ^>=0.4.3,
+        linear ^>=1.21,
+        microlens ^>=0.4.12,
+        microlens-platform ^>=0.4.2,
         rio ^>=0.1.22
 
 library
@@ -146,5 +146,5 @@ test-suite gltf-loader-test
       bytestring >=0.10.12 && <0.12,
       gltf-codec ^>=0.1.0,
       gltf-loader,
-      hspec >=2.10.10 && <3,
+      hspec >=2.9.7 && <3,
       unordered-containers ^>=0.2.19
