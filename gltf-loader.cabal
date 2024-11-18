@@ -79,7 +79,7 @@ common shared
         -Wredundant-constraints
     build-depends:
         base >=4.14.0 && <5,
-        linear ^>=1.21,
+        linear >=1.21 && < 2,
         microlens ^>=0.4.12,
         microlens-platform ^>=0.4.2,
         rio ^>=0.1.22
