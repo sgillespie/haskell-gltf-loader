@@ -19,6 +19,7 @@ module Text.GLTF.Loader.Gltf
     Sampler (..),
     SamplerWrap (..),
     Scene (..),
+    Skin (..),
     Texture (..),
     TextureInfo (..),
     NormalTextureInfo (..),
@@ -117,6 +118,7 @@ data Gltf = Gltf
     gltfNodes :: Vector Node,
     gltfSamplers :: Vector Sampler,
     gltfScenes :: Vector Scene,
+    gltfSkins :: Vector Skin,
     gltfTextures :: Vector Texture
   }
   deriving (Eq, Show)
@@ -202,6 +204,8 @@ data Node = Node
     nodeRotation :: Maybe (Quaternion Float),
     -- | The node's non-uniform scale
     nodeScale :: Maybe (V3 Float),
+    -- | The index of the skin if it contains a skinned mesh
+    nodeSkin :: Maybe Int,
     -- | The node's translation along the x, y, and z axes.
     nodeTranslation :: Maybe (V3 Float),
     -- | The weights of the instantiated morph target.
@@ -233,6 +237,16 @@ data Scene = Scene
   }
   deriving (Eq, Show)
 
+data Skin = Skin
+  { -- | The inverse bind matrices of the joints in this skin
+    skinInverseBindMatrices :: Vector (M44 Float),
+    -- | The user-defined name of this object
+    skinName :: Maybe Text,
+    -- | The node indices of the joints used by this skin
+    skinJoints :: Vector Int
+  }
+  deriving (Eq, Show)
+
 -- | A texture and its sampler.
 data Texture = Texture
   { -- | The user-defined name of this object.
@@ -261,7 +275,11 @@ data MeshPrimitive = MeshPrimitive
     -- | A Vector of vertex texture coordinates
     meshPrimitiveTexCoords :: Vector (V2 Float),
     -- | A Vector of vertex colors.
-    meshPrimitiveColors :: Vector (V4 Float)
+    meshPrimitiveColors :: Vector (V4 Float),
+    -- | A Vector of the joints which affect each vertex
+    meshPrimitiveJoints :: Vector (V4 Word16),
+    -- | A Vector of joint weights for each vertex
+    meshPrimitiveWeights :: Vector (V4 Float)
   }
   deriving (Eq, Show)
 

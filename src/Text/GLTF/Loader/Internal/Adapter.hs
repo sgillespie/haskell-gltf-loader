@@ -42,6 +42,7 @@ import qualified Codec.GlTF.Node as Node
 import qualified Codec.GlTF.PbrMetallicRoughness as PbrMetallicRoughness
 import qualified Codec.GlTF.Sampler as Sampler
 import qualified Codec.GlTF.Scene as Scene
+import qualified Codec.GlTF.Skin as Skin
 import qualified Codec.GlTF.Texture as Texture
 import qualified Codec.GlTF.TextureInfo as TextureInfo
 import qualified Data.HashMap.Strict as HashMap
@@ -66,6 +67,12 @@ attributeTexCoord = "TEXCOORD_0"
 attributeColors :: Text
 attributeColors = "COLOR_0"
 
+attributeJoints :: Text
+attributeJoints = "JOINTS_0"
+
+attributeWeights :: Text
+attributeWeights = "WEIGHTS_0"
+
 runAdapter
   :: GlTF.GlTF
   -> Vector GltfBuffer
@@ -82,6 +89,7 @@ adaptGltf = do
   gltfAnimations <- adaptAnimations animations
   gltfImages <- adaptImages images
   gltfMeshes <- adaptMeshes meshes
+  gltfSkins <- adaptSkins skins
 
   return
     $ Gltf
@@ -93,6 +101,7 @@ adaptGltf = do
         gltfNodes = adaptNodes nodes,
         gltfSamplers = adaptSamplers samplers,
         gltfScenes = adaptScenes scenes,
+        gltfSkins = gltfSkins,
         gltfTextures = adaptTextures textures
       }
 
@@ -160,6 +169,24 @@ adaptImages codecImages = do
 
   iforM images' $ \imgId img ->
     adaptImage (imageData ! imgId) img
+
+adaptSkins :: Maybe (Vector Skin.Skin) -> Adapter (Vector Skin)
+adaptSkins = maybe (return mempty) (mapM adaptSkin)
+
+adaptSkin :: Skin.Skin -> Adapter Skin
+adaptSkin skin = do
+  gltf <- getGltf
+  buffers <- getBuffers
+  let inverseBindMatrices' =
+        maybe mempty (inverseBindMatrices gltf buffers)
+          . Skin.inverseBindMatrices
+          $ skin
+  return
+    $ Skin
+      { skinInverseBindMatrices = inverseBindMatrices',
+        skinName = Skin.name skin,
+        skinJoints = fmap Node.unNodeIx . Skin.joints $ skin
+      }
 
 adaptMaterials :: Maybe (Vector Material.Material) -> Vector Material
 adaptMaterials = maybe mempty (fmap adaptMaterial)
@@ -231,6 +258,7 @@ adaptNode Node.Node{..} =
       nodeName = name,
       nodeRotation = toQuaternion <$> rotation,
       nodeScale = toV3 <$> scale,
+      nodeSkin = Skin.unSkinIx <$> skin,
       nodeTranslation = toV3 <$> translation,
       nodeWeights = maybe [] toList weights
     }
@@ -355,7 +383,9 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
         meshPrimitiveTangents = maybe mempty (vertexTangents gltf buffers') tangents,
         meshPrimitiveTexCoords = maybe mempty (vertexTexCoords gltf buffers') texCoords,
         meshPrimitiveColors =
-          maybe mempty (fmap (mapV4 toRatio) . vertexColors gltf buffers') colors
+          maybe mempty (fmap (mapV4 toRatio) . vertexColors gltf buffers') colors,
+        meshPrimitiveJoints = maybe mempty (vertexJoints gltf buffers') joints,
+        meshPrimitiveWeights = maybe mempty (vertexWeights gltf buffers') weights
       }
   where
     positions = attributes HashMap.!? attributePosition
@@ -363,6 +393,8 @@ adaptMeshPrimitive Mesh.MeshPrimitive{..} = do
     tangents = attributes HashMap.!? attributeTangent
     texCoords = attributes HashMap.!? attributeTexCoord
     colors = attributes HashMap.!? attributeColors
+    joints = attributes HashMap.!? attributeJoints
+    weights = attributes HashMap.!? attributeWeights
     toRatio w = fromIntegral w / fromIntegral (maxBound :: Word16)
     mapV4 f (V4 w x y z) = V4 (f w) (f x) (f y) (f z)
 
